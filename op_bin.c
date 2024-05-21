@@ -83,3 +83,66 @@ void writeRegDadoBin(FILE * file, REG_DADO dados){
     fwrite(dados.nomeClube, sizeof(char), dados.tamNomeClube, file);
 }
 
+//Função que lê um registro de cabeçalho de um arquivo de índice, preenchendo o regCabId
+void readRegCabId(FILE * fileId, REG_CAB_ID * regCabId){
+    fread(&(regCabId -> status), sizeof(char), 1, fileId);   // lê o status
+}
+
+// Função que escreve um registro de cabeçalho num arquivo de índice
+void writeRegCabId(FILE * fOut, REG_CAB_ID cabecalho){
+    fwrite(&(cabecalho.status), sizeof(char), 1, fOut);     // escreve o status
+}
+
+// Função que lê um registro de dados p/ índice de um arquivo de índice, preenchendo o regDadoId
+void readRegDadoId(FILE * fileId, REG_DADO_ID * regDadoId){
+    // Lê o id
+    fread(&(regDadoId -> id), sizeof(int), 1, fileId);
+    // Lê o byteoffset
+    fread(&(regDadoId -> byteoffset), sizeof(long), 1, fileId);
+}
+
+// Função que lê um registro de dados p/ índice de um arquivo de dados, preenchendo regDadoId
+bool readRegDadoIdFromSrc(FILE * filebin, REG_DADO_ID * regDadoId){
+    // variáveis auxiliares para leitura dos campos do arquivo de dados
+    char removido;
+    int tamanhoRegistro;
+    long prox;
+
+    // calculo do byteoffset do registro no arquivo de dados
+    long byteoffset_atual = ftell(filebin);
+
+    // Lê o char de removido
+    fread(&removido, sizeof(char), 1, filebin);
+    // Lê o tamanho do registro
+    fread(&tamanhoRegistro, sizeof(int), 1, filebin);
+
+    long byteoffset_prox = byteoffset_atual + (long) tamanhoRegistro; // calcula o byteoffset do proximo registro
+
+    if(removido == '1'){
+        fseek(filebin, byteoffset_prox, SEEK_SET);   // se o registro estiver removido, pula o registro
+        return false;   // retorna false se o registro estiver removido logicamente, nao há necessidade de leitura dos demais campos
+    }
+
+    // Registro é válido para inserção no arquivo de índices
+
+    // Pula o campo prox
+    fread(&prox, sizeof(long), 1, filebin);
+
+    // Lê o id
+    fread(&(regDadoId->id), sizeof(int), 1, filebin);
+    // Lê byteoffset
+    regDadoId->byteoffset = byteoffset_atual;
+
+    fseek(filebin, byteoffset_prox, SEEK_SET); // pula para o byteoffset do proximo registro
+
+    return true;    // retorna true se o registro for lido corretamente
+}
+
+
+// Função que escreve um registro de dados num arquivo de índice
+void writeRegDadoId(FILE * file, REG_DADO_ID dados){
+    // escrever id
+    fwrite(&(dados.id), sizeof(int), 1, file);
+    // escrever byteoffset
+    fwrite(&(dados.byteoffset), sizeof(long), 1, file);
+}

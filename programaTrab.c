@@ -1,13 +1,6 @@
 #include "select.h"
-#include "create_table.h"
+#include "create.h"
 
-// int main(void){
-//     //createTable("dado2.csv", "naotaprontoainda.bin");
-
-//     select_from("binario3.bin");
-    
-//     return 0;
-// }
 
 int main(void){
 
@@ -47,7 +40,7 @@ int main(void){
         break;
     case 3: //caso 3 = select_from_where 
 
-        int numBuscas; // numerode buscas que serão feitas
+        int numBuscas; // numero de buscas que serão feitas
 
         // lendo o nome dos arquivos
         arquivoIn = lerStr();// arquivo de entrada [nome].bin
@@ -61,6 +54,19 @@ int main(void){
         
         //liberacao da memoria
         free(arquivoIn);
+        break;
+    case 4: //caso 4 = create index 
+
+        // lendo o nome dos arquivos
+        arquivoIn = lerStr();// arquivo de entrada [nome].csv
+        arquivoOut = lerStr();// arquivo de saida  [nome].bin
+
+        //chamada da funcao
+        create_index(arquivoIn, arquivoOut);
+
+        //liberacao da memoria
+        free(arquivoIn);
+        free(arquivoOut);
         break;
     default:
         break;

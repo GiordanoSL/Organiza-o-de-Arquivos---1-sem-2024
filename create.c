@@ -1,5 +1,4 @@
-#include "create_table.h"
-
+#include "create.h"
 
 // Função que implementa a funcionalidade 1: CREATE TABLE
 void create_table(char * arquivoIn, char * arquivoOut){
@@ -60,4 +59,54 @@ void create_table(char * arquivoIn, char * arquivoOut){
 
     // chama função fornecida binarioNaTela
     binarioNaTela(arquivoOut);
+}
+
+// Função que implementa a funcionalidade 4: CREATE INDEX 
+void create_index(char * arquivoDados, char * arquivoIndice){
+    FILE * fDados = fopen(arquivoDados, "rb");     // arquivoDados: nome do arquivo de dados de entrada
+    if(fDados == NULL){
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    FILE * fId = fopen(arquivoIndice, "wb");     // arquivoIndice: nome do arquivo de indice de saída
+    if(fId == NULL){
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    REG_CAB reg_cab;            // cabecalho do arquivo de dados
+    REG_CAB_ID reg_cab_id;      // cabecalho do arquivo de indice
+    REG_DADO_ID reg_dado_id;    // auxiliar para escrita no arquivo de indice
+
+    readRegCabBin(fDados, &reg_cab);    // lê cabecalho do arquivo de dados
+
+    if(reg_cab.status == '0'){          // se o arquivo de dados estiver inconsistente
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    int num_reg_total = reg_cab.nroRegArq + reg_cab.nroRegRem;  // calcula total de registros no arquivo
+
+    reg_cab_id.status = 0;
+    writeRegCabId(fId, reg_cab_id);     // escreve cabecalho com status = 0 (inconsistente)       ftell(fDados) != tamArquivo
+
+    int count = 0;
+    while (count < num_reg_total){      // Enquanto ainda não foram lidos todos os registros no arquivo
+        if(readRegDadoIdFromSrc(fDados, &reg_dado_id))      // se a leitura do registro retornou true, escrita no arquivo de índices
+            writeRegDadoId(fId, reg_dado_id);
+    
+        count++;
+    }
+
+    fseek(fId, 0, SEEK_SET);
+    reg_cab_id.status = '1';
+    writeRegCabId(fId, reg_cab_id);     // escreve cabecalho com status = 1 (consistente)
+
+    // fecha os arquivos
+    fclose(fDados);
+    fclose(fId);
+
+    // chama função fornecida binarioNaTela
+    binarioNaTela(arquivoIndice);
 }
