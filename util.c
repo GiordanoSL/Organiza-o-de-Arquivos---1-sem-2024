@@ -87,5 +87,10 @@ char * lerStr(){
 
 void preencheLixo(FILE * fDados, int espaco){
 	char lixo = '$';
-    fwrite(&lixo, sizeof(char), espaco, fDados);
+	for (int i = 0; i < espaco; i++)
+	{
+		fwrite(&lixo, sizeof(char), 1, fDados);
+	}
+	
+    
 }

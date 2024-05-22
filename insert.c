@@ -20,7 +20,7 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
     readRegCabId(fId, &regCabId);
 
     if (regCabDados.status == '0' || regCabId.status == '0') {
-        //printf("Falha no processamento do arquivo.\n");
+        printf("Falha no processamento do arquivo.\n");
         fclose(fDados);
         fclose(fId);
         return;
@@ -98,7 +98,7 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
         } else {
             // Inserir em espaço reaproveitado
             fseek(fDados, regCabDados.topo, SEEK_SET);
-            ant = ftell(fDados);
+            ant = regCabDados.topo;
             fread(&removido, sizeof(char), 1, fDados);
             fread(&tam, sizeof(int), 1, fDados);
 
@@ -111,18 +111,17 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
                 regCabDados.topo = prox;
                 fseek(fDados, ant, SEEK_SET);
                 writeRegDadoBin(fDados, regDadoModelo);
-                if(dif > 0)
-                    preencheLixo(fDados, dif);
+                preencheLixo(fDados, dif);
                 regDadoIdModelo->byteoffset = ant;
                 insert_ordenado(vetorIndices, regDadoIdModelo, regCabDados.nroRegArq + i - 1);
-                regCabDados.nroRegRem += -1;
+                regCabDados.nroRegRem = regCabDados.nroRegRem - 1;
             } else {
                 while (tam < regDadoModelo.tamanhoRegistro) {
-                    ant = ftell(fDados);
+                    ant = ftell(fDados);    //ant guarda posição do anterior antes do campo prox 
                     fread(&prox, sizeof(long), 1, fDados);
                     if (prox != -1) {
                         fseek(fDados, prox, SEEK_SET);
-                        pos = ftell(fDados);
+                        pos = prox;
                         fread(&removido, sizeof(char), 1, fDados);
                         fread(&tam, sizeof(int), 1, fDados);
                     } else {
@@ -144,14 +143,13 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
                 //printf("inserindo no meio\n");
                 int dif = tam - regDadoModelo.tamanhoRegistro;
                 regDadoModelo.tamanhoRegistro = tam;
-                fread(&prox, sizeof(long), 1, fDados);
-                fseek(fDados, ant, SEEK_SET);
-                fwrite(&prox, sizeof(long), 1, fDados);
-                fseek(fDados, pos, SEEK_SET);
-                writeRegDadoBin(fDados, regDadoModelo);
-                regCabDados.nroRegRem -= 1;
-                if(dif > 0)
-                    preencheLixo(fDados, dif);
+                fread(&prox, sizeof(long), 1, fDados);  // pega o proximo do atual
+                fseek(fDados, ant, SEEK_SET);           // vou para o anterior
+                fwrite(&prox, sizeof(long), 1, fDados); // proximo do anterior = proximo do atual
+                fseek(fDados, pos, SEEK_SET);           // volta para o atual         
+                writeRegDadoBin(fDados, regDadoModelo); // escreve novo registro
+                preencheLixo(fDados, dif);
+                regCabDados.nroRegRem = regCabDados.nroRegRem - 1;
                 regDadoIdModelo->byteoffset = pos;
                 insert_ordenado(vetorIndices, regDadoIdModelo, regCabDados.nroRegArq + i - 1);
             }
