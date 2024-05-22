@@ -17,8 +17,10 @@ void select_from(char * arquivobin){
     REG_CAB regCab; // Declara registro de cabeçalho
     readRegCabBin(filebin, &regCab); // Lê registro de cabeçalho
 
-    if(regCab.status == '0'){   // Verifica se o arquivo está consistente
-        printf("Falha no processamento do arquivo.\n"); // Caso não esteja, não processa o arquivo
+    // Se o arquivo estiver inconsistente, houve falha no processamento do arquivo
+    if(regCab.status == '0'){
+        printf("Falha no processamento do arquivo.\n");
+        fclose(filebin);
         return;
     }
 
@@ -62,21 +64,17 @@ void select_from_where(char * arquivobin, int num_buscas){
         return;
     }
 
-    // Determinação do tamaho do arquivo
+    // Determinação do tamanho do arquivo
     fseek(filebin, 0, SEEK_END);
     long int tamArquivo = ftell(filebin);
     fseek(filebin, 0, SEEK_SET);
 
     REG_CAB regCab; // Declara registro de cabeçalho
     readRegCabBin(filebin, &regCab); // Lê registro de cabeçalho
-    
-    if(regCab.status == '0'){   // Verifica se o arquivo está consistente
-        printf("Falha no processamento do arquivo.\n"); // Caso não esteja, não processa o arquivo
-        return;
-    }
 
-    // Se o numero de arquivos registrados for zero, nao eh necessario fazer a busca
-    if(regCab.nroRegArq == 0){
+    // Se o numero de arquivos registrados for zero ou se o arquivo estiver inconsistente,
+    // nao eh necessario fazer a busca
+    if(regCab.nroRegArq == 0 || regCab.status == '0'){
         printf("Registro inexistente.\n"); 
         fclose(filebin);
         return;

@@ -7,7 +7,7 @@ int lerIntCsv(FILE * file){
     char aux;
     char * intStr = (char *) malloc(sizeof(char)*9);
     //ler int
-    while(((aux = (char) getc(file)) != ',') && aux != '\n' && aux != '\r'){ // lê até a ,
+    while((aux = (char) getc(file)) != ','){ // lê até a ,
         if(i < 9)
             intStr[i] = aux; // enquanto couber, guarda os caracteres na string
         else{
@@ -38,9 +38,7 @@ int lerStrCsv(FILE * file, char ** dest){
         fprintf(stderr, "Erro ao alocar memoria na funcao lerStrCsv()\n");
         exit(1);
     }
-    while(((aux = (char) getc(file)) != ',') && aux != '\n'){   // lê até a , ou até o \n
-        if(aux == '\r') // ignora os '\r's
-            continue;
+    while(((aux = (char) getc(file)) != ',') && aux != '\n' && aux != '\r'){   // lê até a , até o \n ou até o \r
         str = (char *) realloc(str, i + 1);     // aloca de caractere em caractere
         str[i] = aux;
         i++;

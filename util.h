@@ -13,4 +13,6 @@
     // lê string do arquivo de entrada
     char * lerStr();
 
+    void preencheLixo(FILE * fDados, int espaco);
+
 #endif

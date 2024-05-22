@@ -1,6 +1,5 @@
 #include "util.h"
 
-// Função fornecida
 void binarioNaTela(char *nomeArquivoBinario) { /* Você não precisa entender o código dessa função. */
 
 	/* Use essa função para comparação no run.codes. Lembre-se de ter fechado (fclose) o arquivo anteriormente.
@@ -29,7 +28,6 @@ void binarioNaTela(char *nomeArquivoBinario) { /* Você não precisa entender o 
 	fclose(fs);
 }
 
-// Função fornecida
 void scan_quote_string(char *str) {
 
 	/*
@@ -60,10 +58,10 @@ void scan_quote_string(char *str) {
 	} else if(R != EOF){ // vc tá tentando ler uma string que não tá entre aspas! Fazer leitura normal %s então, pois deve ser algum inteiro ou algo assim...
 		str[0] = R;
 		scanf("%s", &str[1]);
-
 	} else { // EOF
 		strcpy(str, "");
 	}
+
 }
 
 // Função que lê uma string do arquivo de entrada
@@ -85,4 +83,9 @@ char * lerStr(){
     str[i] = '\0'; // adicionando terminador nulo na string
     
     return str;
+}
+
+void preencheLixo(FILE * fDados, int espaco){
+	char lixo = '$';
+    fwrite(&lixo, sizeof(char), espaco, fDados);
 }

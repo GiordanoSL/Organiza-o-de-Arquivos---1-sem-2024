@@ -1,5 +1,6 @@
 #include "select.h"
 #include "create.h"
+#include "insert.h"
 
 
 int main(void){
@@ -7,11 +8,14 @@ int main(void){
     int comando;
 
     scanf(" %d", &comando);
+    
     getchar();//descarta o '\n' da entrada
 
     // strings para nomes de arquivos
     char * arquivoIn;
     char * arquivoOut;
+    char * arquivoIndice;
+    char * arquivoDados;
 
     switch (comando){
     case 1: // caso 1 = create_table
@@ -62,11 +66,33 @@ int main(void){
         arquivoOut = lerStr();// arquivo de saida  [nome].bin
 
         //chamada da funcao
-        create_index(arquivoIn, arquivoOut);
+        if(create_index(arquivoIn, arquivoOut))
+            binarioNaTela(arquivoOut);  // chama função fornecida binarioNaTela
 
         //liberacao da memoria
         free(arquivoIn);
         free(arquivoOut);
+        break;
+    case 6: //caso 6 = insert_into 
+
+        int numInsert; // numero de insercoes que serão feitas
+
+        // lendo o nome dos arquivos
+        arquivoDados = lerStr();// arquivo de dados [nome].bin
+        arquivoIndice = lerStr();// arquivo de indice [nome].bin
+
+
+        
+        //lendo o numero de insercoes
+        scanf(" %d", &numInsert);
+        getchar(); // descarta o '\n' da entrada
+
+        //chamada da funcao
+        insert_into(arquivoDados, arquivoIndice, numInsert);
+        
+        //liberacao da memoria
+        free(arquivoDados);
+        free(arquivoIndice);
         break;
     default:
         break;

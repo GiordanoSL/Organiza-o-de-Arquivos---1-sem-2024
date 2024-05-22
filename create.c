@@ -62,51 +62,68 @@ void create_table(char * arquivoIn, char * arquivoOut){
 }
 
 // Função que implementa a funcionalidade 4: CREATE INDEX 
-void create_index(char * arquivoDados, char * arquivoIndice){
+bool create_index(char * arquivoDados, char * arquivoIndice){
     FILE * fDados = fopen(arquivoDados, "rb");     // arquivoDados: nome do arquivo de dados de entrada
     if(fDados == NULL){
         printf("Falha no processamento do arquivo.\n");
-        return;
+        return false;
     }
 
     FILE * fId = fopen(arquivoIndice, "wb");     // arquivoIndice: nome do arquivo de indice de saída
     if(fId == NULL){
         printf("Falha no processamento do arquivo.\n");
-        return;
+        return false;
     }
 
     REG_CAB reg_cab;            // cabecalho do arquivo de dados
     REG_CAB_ID reg_cab_id;      // cabecalho do arquivo de indice
-    REG_DADO_ID reg_dado_id;    // auxiliar para escrita no arquivo de indice
+    REG_DADO_ID * reg_dado_id;    // auxiliar para escrita no arquivo de indice
 
     readRegCabBin(fDados, &reg_cab);    // lê cabecalho do arquivo de dados
 
     if(reg_cab.status == '0'){          // se o arquivo de dados estiver inconsistente
         printf("Falha no processamento do arquivo.\n");
-        return;
+        return false;
     }
 
     int num_reg_total = reg_cab.nroRegArq + reg_cab.nroRegRem;  // calcula total de registros no arquivo
 
     reg_cab_id.status = 0;
-    writeRegCabId(fId, reg_cab_id);     // escreve cabecalho com status = 0 (inconsistente)       ftell(fDados) != tamArquivo
+    writeRegCabId(fId, reg_cab_id);     // escreve cabecalho com status = 0 (inconsistente)    
 
-    int count = 0;
-    while (count < num_reg_total){      // Enquanto ainda não foram lidos todos os registros no arquivo
-        if(readRegDadoIdFromSrc(fDados, &reg_dado_id))      // se a leitura do registro retornou true, escrita no arquivo de índices
-            writeRegDadoId(fId, reg_dado_id);
-    
-        count++;
+    // primeiramente todos os registros de dados de indice serao criados em memoria primaria num vetor,
+    // será feita inserção ordenada nesse vetor e, então, será criado o arquivo refletindo-o
+    REG_DADO_ID ** vetorId = (REG_DADO_ID **) malloc(reg_cab.nroRegArq * sizeof(REG_DADO_ID *));
+    if(vetorId == NULL){
+        printf("sem espaço");
+        exit(1);
     }
 
-    fseek(fId, 0, SEEK_SET);
-    reg_cab_id.status = '1';
-    writeRegCabId(fId, reg_cab_id);     // escreve cabecalho com status = 1 (consistente)
+    // insercao ordenada no vetor de indices
+    int i = 0, count = 0; // i - controle do loop, count - nro de registros adicionados no vetor até aquela etapa
+    while (i < num_reg_total){      // Enquanto ainda não foram lidos todos os registros no arquivo
+        reg_dado_id = (REG_DADO_ID *) malloc(sizeof(REG_DADO_ID));
+        if(reg_dado_id == NULL){
+            printf("sem espaço");
+            exit(1);
+        }
+        
+        if(readRegDadoIdFromSrc(fDados, reg_dado_id)){      // se a leitura do registro retornou true, insercao ordenada no vetor de indices
+            insert_ordenado(vetorId, reg_dado_id, count);
+            count++;
+        } else {                                            // se a leitura do registro retornou false, o registro estava removido logicamente
+            free(reg_dado_id);                              // libera memoria do registro removido
+            reg_dado_id = NULL;
+        }
+            
+        i++;
+    }
 
+    // estando o vetor devidamente ordenado com todos os registros de dados de indice, reescreve o arquivo de indices
+    reescrita(fId, vetorId, reg_cab.nroRegArq);     // ao final da reescrita: status = '1'
+    
     // fecha os arquivos
     fclose(fDados);
     fclose(fId);
-
-    // chama função fornecida binarioNaTela
-    binarioNaTela(arquivoIndice);
+    return true;
 }
