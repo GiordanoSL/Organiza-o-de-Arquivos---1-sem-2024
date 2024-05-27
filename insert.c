@@ -1,3 +1,9 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+-------------------------------------------------------*/
+
+
 #include "insert.h"
 
 void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
@@ -26,7 +32,7 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
         return;
     }
 
-    REG_DADO_ID **vetorIndices = carregamento(fId, regCabDados.nroRegArq + numInsert);
+    REG_DADO_ID **vetorIndices = carregamento(fId, regCabDados.nroRegArq, numInsert); // já aloca espaço para as inserções no vetor
 
     REG_DADO regDadoModelo;
     
@@ -54,32 +60,9 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
         regDadoModelo.idade = atoi(idade);
         getchar();
 
-        regDadoModelo.nomeJogador = (char *)calloc(50, sizeof(char));
-        if (regDadoModelo.nomeJogador == NULL) exit(1);
-        scan_quote_string(regDadoModelo.nomeJogador);
-        if(strcmp(regDadoModelo.nomeJogador, "") == 0)
-            regDadoModelo.tamNomeJog = 0;
-        else
-            regDadoModelo.tamNomeJog= strlen(regDadoModelo.nomeJogador);
-        getchar();
-
-        regDadoModelo.nacionalidade = (char *)calloc(50, sizeof(char));
-        if (regDadoModelo.nacionalidade == NULL) exit(1);
-        scan_quote_string(regDadoModelo.nacionalidade);
-        if(strcmp(regDadoModelo.nacionalidade, "") == 0)
-            regDadoModelo.tamNacionalidade = 0;
-        else
-            regDadoModelo.tamNacionalidade = strlen(regDadoModelo.nacionalidade);
-        getchar();
-
-        regDadoModelo.nomeClube = (char *)calloc(50, sizeof(char));
-        if (regDadoModelo.nomeClube == NULL) exit(1);
-        scan_quote_string(regDadoModelo.nomeClube);
-        if(strcmp(regDadoModelo.nomeClube, "") == 0)
-            regDadoModelo.tamNomeClube = 0;
-        else
-            regDadoModelo.tamNomeClube = strlen(regDadoModelo.nomeClube);
-        getchar();
+        readQuoteField(&(regDadoModelo.nomeJogador), &(regDadoModelo.tamNomeJog));
+        readQuoteField(&(regDadoModelo.nacionalidade), &(regDadoModelo.tamNacionalidade));
+        readQuoteField(&(regDadoModelo.nomeClube), &(regDadoModelo.tamNomeClube));
 
         regDadoModelo.removido = '0';
         regDadoModelo.tamanhoRegistro = 33 + regDadoModelo.tamNomeJog + regDadoModelo.tamNacionalidade + regDadoModelo.tamNomeClube;
@@ -137,8 +120,14 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
                     }
                 }
 
-                if (flagInsertFim == '1') continue;
-
+                if (flagInsertFim == '1'){
+                    free(regDadoModelo.nomeJogador);
+                    free(regDadoModelo.nacionalidade);
+                    free(regDadoModelo.nomeClube);
+                    continue;
+                }
+                    
+                
                 // Insere "no meio" da lista
                 //printf("inserindo no meio\n");
                 int dif = tam - regDadoModelo.tamanhoRegistro;
@@ -166,6 +155,14 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
 
     fseek(fId, sizeof(char), SEEK_SET); // volta para a posição após o cabecalho para chamar reescrita
     reescrita(fId, vetorIndices, regCabDados.nroRegArq);
+
+    for (int i = 0; i < regCabDados.nroRegArq; i++)
+    {
+        free(vetorIndices[i]);
+        vetorIndices[i] = NULL;
+    }
+    free(vetorIndices);
+    vetorIndices = NULL;
 
     fclose(fDados);
     fclose(fId);

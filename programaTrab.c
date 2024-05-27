@@ -1,3 +1,9 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+-------------------------------------------------------*/
+
+
 #include "select.h"
 #include "create.h"
 #include "insert.h"
@@ -81,8 +87,6 @@ int main(void){
         arquivoDados = lerStr();// arquivo de dados [nome].bin
         arquivoIndice = lerStr();// arquivo de indice [nome].bin
 
-
-        
         //lendo o numero de insercoes
         scanf(" %d", &numInsert);
         getchar(); // descarta o '\n' da entrada

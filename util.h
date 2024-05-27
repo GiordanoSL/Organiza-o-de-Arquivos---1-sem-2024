@@ -1,3 +1,12 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+
+Funções auxiliares e fornecidas
+-------------------------------------------------------*/
+
+
+
 #ifndef UTILH
     #define UTILH
 
@@ -12,6 +21,7 @@
 
     // lê string do arquivo de entrada
     char * lerStr();
+    void readQuoteField(char ** string, int * tam);
 
     void preencheLixo(FILE * fDados, int espaco);
 

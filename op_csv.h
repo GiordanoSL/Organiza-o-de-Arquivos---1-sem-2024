@@ -1,3 +1,12 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+
+// Operações em CSV
+-------------------------------------------------------*/
+
+
+
 #ifndef OP_CSVH
     #define OP_CSVH
 

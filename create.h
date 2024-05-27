@@ -1,3 +1,13 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+
+Funções de criação:
+ - tabela (create_table)
+ - índice (create_index)
+-------------------------------------------------------*/
+
+
 #ifndef CREATE_TABLEH
     #define CREATE_TABLEH
 

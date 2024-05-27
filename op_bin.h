@@ -1,3 +1,11 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+
+Operações em binários
+-------------------------------------------------------*/
+
+
 #ifndef OP_BINH
     #define OP_BINH
 

@@ -1,3 +1,9 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+-------------------------------------------------------*/
+
+
 #include "create.h"
 
 // Função que implementa a funcionalidade 1: CREATE TABLE
@@ -72,6 +78,7 @@ bool create_index(char * arquivoDados, char * arquivoIndice){
     FILE * fId = fopen(arquivoIndice, "wb");     // arquivoIndice: nome do arquivo de indice de saída
     if(fId == NULL){
         printf("Falha no processamento do arquivo.\n");
+        fclose(fDados);
         return false;
     }
 
@@ -83,6 +90,8 @@ bool create_index(char * arquivoDados, char * arquivoIndice){
 
     if(reg_cab.status == '0'){          // se o arquivo de dados estiver inconsistente
         printf("Falha no processamento do arquivo.\n");
+        fclose(fDados);
+        fclose(fId);
         return false;
     }
 
@@ -121,6 +130,16 @@ bool create_index(char * arquivoDados, char * arquivoIndice){
 
     // estando o vetor devidamente ordenado com todos os registros de dados de indice, reescreve o arquivo de indices
     reescrita(fId, vetorId, reg_cab.nroRegArq);     // ao final da reescrita: status = '1'
+
+    // libera memoria
+    for (int i = 0; i < count; i++)
+    {
+        free(vetorId[i]);
+        vetorId[i] = NULL;
+    }
+    free(vetorId);
+    vetorId = NULL;
+    
     
     // fecha os arquivos
     fclose(fDados);

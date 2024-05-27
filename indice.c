@@ -1,6 +1,12 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+-------------------------------------------------------*/
+
+
 #include "indice.h"
 
-REG_DADO_ID ** carregamento(FILE * fId, int nroRegArq){
+REG_DADO_ID ** carregamento(FILE * fId, int nroRegArq, int numInsert){
     if(fId == NULL){                    // arquivo de indice inválido
         printf("Falha no processamento do arquivo.\n");
         return NULL;
@@ -19,7 +25,7 @@ REG_DADO_ID ** carregamento(FILE * fId, int nroRegArq){
     fseek(fId, 0, SEEK_SET);
     writeRegCabId(fId, regCabId);   // arquivo de índice aberto para carregamento -> arquivo inconsistente
 
-    REG_DADO_ID **vetorId = (REG_DADO_ID **)malloc(nroRegArq * sizeof(REG_DADO_ID *));  // Corrigido o tamanho da alocação
+    REG_DADO_ID **vetorId = (REG_DADO_ID **)malloc((nroRegArq + numInsert) * sizeof(REG_DADO_ID *)); 
  
     for (int i = 0; i < nroRegArq; i++){
         REG_DADO_ID * regDadoId = (REG_DADO_ID *) malloc(sizeof(REG_DADO_ID));
@@ -35,19 +41,18 @@ void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq){
     if(fId == NULL || vetorId == NULL){                    // arquivo de indice inválido ou vetor inválido
         printf("Falha no processamento do arquivo.\n");
         return;
-    }
-
-    //fseek(fId, 0, SEEK_SET);
+    } 
 
     REG_CAB_ID regCabId;
-    // readRegCabId(fId, &regCabId);
 
     for (int i = 0; i < nroRegArq; i++){
-        writeRegDadoId(fId, *(vetorId[i]));    // reescreve arquivo de índice
+       if (vetorId[i] != NULL)   // Verifica se o ponteiro não é nulo antes de usá-lo
+            writeRegDadoId(fId, *(vetorId[i]));    // reescreve arquivo de índice
     }
 
     regCabId.status = '1';
-    fseek(fId, 0, SEEK_SET);
+    fseek(fId, 0, SEEK_SET);                // retorna para o início do arquivo
+    
     writeRegCabId(fId, regCabId);           // muda status para consistente (atualizado)
     
 }
@@ -76,6 +81,4 @@ void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int count)
 
     // Insere o novo elemento na posição correta
     vetorId[position] = regDadoId;
-    // vetorId[position]->byteoffset = regDadoId->byteoffset;
-    // vetorId[position]->id = regDadoId->id;
 }

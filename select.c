@@ -1,3 +1,9 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+-------------------------------------------------------*/
+
+
 #include "select.h"
 
 void select_from(char * arquivobin){

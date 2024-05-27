@@ -1,3 +1,9 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+-------------------------------------------------------*/
+
+
 #include "util.h"
 
 void binarioNaTela(char *nomeArquivoBinario) { /* Você não precisa entender o código dessa função. */
@@ -93,4 +99,15 @@ void preencheLixo(FILE * fDados, int espaco){
 	}
 	
     
+}
+
+void readQuoteField(char ** string, int * tam){
+	*string = (char *)calloc(50, sizeof(char));
+	if (*string == NULL) exit(1);
+	scan_quote_string(*string);
+	if(strcmp(*string, "") == 0)
+		*tam = 0;
+	else
+		*tam = strlen(*string);
+	getchar();
 }

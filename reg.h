@@ -1,3 +1,12 @@
+/*-----------------------------------------------------
+Autores: Giordano Santorum Lorenzetto - nUSP 14574017
+         Victor Moreli dos Santos - nUSP 14610514
+
+Define registros de dados e de cabeçalho, tanto para arquivo de dados quanto para arquivo de índices
+-------------------------------------------------------*/
+
+
+
 #ifndef REGH
     #define REGH
 
