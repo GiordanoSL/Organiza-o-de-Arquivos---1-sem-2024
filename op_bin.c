@@ -106,7 +106,8 @@ void readRegDadoId(FILE * fileId, REG_DADO_ID * regDadoId){
     fread(&(regDadoId -> byteoffset), sizeof(long), 1, fileId);
 }
 
-// Função que lê um registro de dados p/ índice de um arquivo de dados, preenchendo regDadoId
+// Função que lê um registro de dados p/ índice de um arquivo de dados, preenchendo regDadoId.
+// retorna false se o registro estiver removido, true se o registro for lido corretamente
 bool readRegDadoIdFromSrc(FILE * filebin, REG_DADO_ID * regDadoId){
     // variáveis auxiliares para leitura dos campos do arquivo de dados
     char removido;

@@ -27,10 +27,9 @@ void create_table(char * arquivoIn, char * arquivoOut){
     REG_CAB cabecalho;      // receberá o cabecalho
     REG_DADO dados;         // recebera cada registro de dados
     
-    // deixa espaço para o registro de cabecalho
-    fseek(fOut, TAM_REG_CAB, SEEK_CUR);
-
-    cabecalho.nroRegArq = 0;
+    // escreve cabecalho com status  = 0 (inconsistente)
+    cabecalho.status = '0';
+    writeRegCabBin(fOut, cabecalho);    // escreve cabecalho indicando que arquivo está *inconsistente*
 
     //pula primeira linha do .csv (cabeçalho do csv)
     while(getc(fIn) != '\n'){
@@ -57,7 +56,7 @@ void create_table(char * arquivoIn, char * arquivoOut){
 
     
     fseek(fOut, 0, SEEK_SET);           // volta para o inicio
-    writeRegCabBin(fOut, cabecalho);    // escreve o cabecalho no arquivo binario
+    writeRegCabBin(fOut, cabecalho);    // escreve o cabecalho no arquivo binario, indicando que o arquivo está *consistente*
 
     // fecha os arquivos
     fclose(fIn);
@@ -131,7 +130,7 @@ bool create_index(char * arquivoDados, char * arquivoIndice){
     // estando o vetor devidamente ordenado com todos os registros de dados de indice, reescreve o arquivo de indices
     reescrita(fId, vetorId, reg_cab.nroRegArq);     // ao final da reescrita: status = '1'
 
-    // libera memoria
+    // libera memoria do vetor de registros de índice
     for (int i = 0; i < count; i++)
     {
         free(vetorId[i]);
