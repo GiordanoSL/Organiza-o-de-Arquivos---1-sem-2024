@@ -18,10 +18,10 @@ void delete_from_where(char * arquivoBinario, char * arquivoIndice, int numRem){
     }
 
     // Abertura do arquivo de indice para leitura
-    FILE * fId = fopen(arquivoIndice, "rb");
+    FILE * fId = fopen(arquivoIndice, "rb+");
     if(fId == NULL){
         create_index(arquivoBinario, arquivoIndice);  // caso o arquivo ainda nao exista cria o arquivo por meio da funcionalidade 4 (create_index)
-        fId = fopen(arquivoIndice, "rb");
+        fId = fopen(arquivoIndice, "rb+");
         if(fId == NULL){
             fclose(fBin);
             printf("Falha no processamento do arquivo.\n");
@@ -80,26 +80,35 @@ void delete_from_where(char * arquivoBinario, char * arquivoIndice, int numRem){
                 if(comparaRegDado(regDadoModelo, regDado)){
                     remove_reg_dado(fBin, vetorIndices, offset, &regDado, &regCab);
                 }
+
+                //liberacao da memoria usada pelo registro de dados temporario
+                free(regDado.nomeJogador);
+                free(regDado.nacionalidade);
+                free(regDado.nomeClube);
             }
         }else{ // quando o ID não é especificado a busca é sequencial pelo arquivo
             while(readRegDadoBin(fBin, &regDado) != 0){ // enquanto a leitura de registros for possível vai lendo registro a registro do arquivo binario de entrada
-            // se o registro lido nao estiver removido, compara com o registro modelo 
-            if(regDado.removido == '0'){
-                if(comparaRegDado(regDadoModelo, regDado)){
-                    //REGISTRO PARA SER REMOVIDO ENCONTRADO
+                // se o registro lido nao estiver removido, compara com o registro modelo 
+                if(regDado.removido == '0'){
+                    if(comparaRegDado(regDadoModelo, regDado)){
+                        //REGISTRO PARA SER REMOVIDO ENCONTRADO
 
-                    // volta o ponteiro de arquivo binario para o byteOffset inicial do registro que vai ser removido
-                    fseek(fBin, -(regDado.tamanhoRegistro), SEEK_CUR); 
-                    long offset = ftell(fBin); // byte offset do registro que será removido
-                    remove_reg_dado(fBin, vetorIndices, offset, &regDado, &regCab);
-                }                
-            }
-            //liberacao da memoria usada pelo registro de dados temporario
-            free(regDado.nomeJogador);
-            free(regDado.nacionalidade);
-            free(regDado.nomeClube);              
+                        // volta o ponteiro de arquivo binario para o byteOffset inicial do registro que vai ser removido
+                        fseek(fBin, -(regDado.tamanhoRegistro), SEEK_CUR); 
+                        long offset = ftell(fBin); // byte offset do registro que será removido
+                        remove_reg_dado(fBin, vetorIndices, offset, &regDado, &regCab);
+                    }                
+                }
+
+                //liberacao da memoria usada pelo registro de dados temporario
+                free(regDado.nomeJogador);
+                free(regDado.nacionalidade);
+                free(regDado.nomeClube);
+                              
             }
         }
+
+        
         
         // liberação da memória usada pelo registro modelo
         if(regDadoModelo.nacionalidade != NULL) free(regDadoModelo.nacionalidade);
@@ -117,13 +126,22 @@ void delete_from_where(char * arquivoBinario, char * arquivoIndice, int numRem){
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-    // reescrita a partir do vetor de índices atualizado
+    //reescrita a partir do vetor de índices atualizado
     reescrita(fId, vetorIndices, regCab.nroRegArq);
 
     // Remoções realizadas com sucesso, status do arquivo volta para consistente 
     regCab.status = '1';    
     fseek(fBin, 0, SEEK_SET); // volta para o inicio do arquivo e atualiza o registro de cabeçalho
     writeRegCabBin(fBin, regCab);
+
+    // liberação de memória do vetor de índices
+    for (int i = 0; i < regCab.nroRegArq; i++)
+    {
+        free(vetorIndices[i]);
+        vetorIndices[i] = NULL;
+    }
+    free(vetorIndices);
+    vetorIndices = NULL;
 
     //fecha os arquivos
     fclose(fBin);
@@ -138,7 +156,7 @@ void delete_from_where(char * arquivoBinario, char * arquivoIndice, int numRem){
 void remove_reg_dado(FILE * fBin, REG_DADO_ID ** vetorIndices, long offset, REG_DADO * regDado, REG_CAB * regCab){
 
     int tamanhoAux; // variável auxiliar para guardar o tamanho do registro atual na lista de removidos
-    long proxAux; // variável auxiliar para guardar o byte offset do proximo registr na lista de removidos
+    long proxAux; // variável auxiliar para guardar o byte offset do proximo registro na lista de removidos
     long offsetAux; // variável auxiliar para guardar o byte offset do registro atual na lista de removidos
     long offsetAnt; // variável auxiliar para guardar o byte offset do registro anterior na lista de removidos
 

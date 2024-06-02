@@ -184,6 +184,14 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
     fseek(fDados, 0, SEEK_SET);         // vai para o início
     writeRegCabBin(fDados, regCabDados);    // escreve novo cabeçalho
 
+    // Fecha o arquivo de índices para criá-lo novamente a partir do recarregamento do vetor de índices que está em memória primária
+    fclose(fId);
+    // Abertura do arquivo de indice, agora para escrita (exclui o anterior)
+    fId = fopen(arquivoIndice, "wb");
+    if(fId == NULL){
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
     reescrita(fId, vetorIndices, regCabDados.nroRegArq);    // reescreve arquivo de índices a partir do vetor, status = 1
 
     // liberação de memória do vetor de índices
