@@ -7,6 +7,7 @@ Autores: Giordano Santorum Lorenzetto - nUSP 14574017
 #include "select.h"
 #include "create.h"
 #include "insert.h"
+#include "delete.h"
 
 
 int main(void){
@@ -79,6 +80,25 @@ int main(void){
         free(arquivoIn);
         free(arquivoOut);
         break;
+    case 5: //caso 5 = delete_from_where 
+
+        int numRem; // numero de remoções que serão feitas
+
+        // lendo o nome dos arquivos
+        arquivoDados = lerStr();// arquivo de dados [nome].bin
+        arquivoIndice = lerStr();// arquivo de indice [nome].bin
+
+        //lendo o numero de remoções
+        scanf(" %d", &numRem);
+        getchar(); // descarta o '\n' da entrada
+
+        //chamada da funcao
+        delete_from_where(arquivoDados, arquivoIndice, numRem);
+        
+        //liberacao da memoria
+        free(arquivoDados);
+        free(arquivoIndice);
+        break;
     case 6: //caso 6 = insert_into 
 
         int numInsert; // numero de insercoes que serão feitas
@@ -99,6 +119,7 @@ int main(void){
         free(arquivoIndice);
         break;
     default:
+            binarioNaTela("indice4.bin");  // chama função fornecida binarioNaTela
         break;
     }
 

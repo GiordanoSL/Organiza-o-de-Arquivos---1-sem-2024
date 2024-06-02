@@ -17,6 +17,11 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
     if (fId == NULL) {                              // se o arquivo de índices não existir
         create_index(arquivoDados, arquivoIndice);  // cria o arquivo por meio da funcionalidade 4 (create_index)
         fId = fopen(arquivoIndice, "rb+");
+        if (fId == NULL) {                          // verifica se o arquivo foi aberto sem erros
+            fclose(fDados);                         // fecha o arquivo que ja estava aberto
+            printf("Falha no processamento do arquivo.\n");
+            return;
+        }
     }
 
     REG_CAB regCabDados;

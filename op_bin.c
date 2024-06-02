@@ -36,9 +36,10 @@ void writeRegCabBin(FILE * fOut, REG_CAB cabecalho){
 }
 
 //Função que lê um registro de dados de um arquivo binário, preenchendo o regDado
-void readRegDadoBin(FILE * filebin, REG_DADO * regDado){
+int readRegDadoBin(FILE * filebin, REG_DADO * regDado){
     // Lê o char de removido
-    fread(&(regDado -> removido), sizeof(char), 1, filebin);
+    if(fread(&(regDado -> removido), sizeof(char), 1, filebin) == 0)
+        return 0;
     // Lê o tamanho do registro
     fread(&(regDado -> tamanhoRegistro), sizeof(int), 1, filebin);
     // Lê o prox
@@ -59,6 +60,8 @@ void readRegDadoBin(FILE * filebin, REG_DADO * regDado){
     fread(&(regDado -> tamNomeClube), sizeof(int), 1, filebin);
     // Lê o nome do clube
     lerStrBin(filebin, &(regDado -> nomeClube), regDado -> tamNomeClube);
+
+    return 1;
 }
 
 

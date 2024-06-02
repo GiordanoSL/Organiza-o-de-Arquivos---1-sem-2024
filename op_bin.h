@@ -21,7 +21,7 @@ Operações em binários
     // Função que lê um registro de cabeçalho de um arquivo binário, preenchendo o regCab
     void readRegCabBin(FILE * filebin, REG_CAB * regCab);
     // Função que lê um registro de dados de um arquivo binário, preenchendo o regDado
-    void readRegDadoBin(FILE * filebin, REG_DADO * regDado);
+    int readRegDadoBin(FILE * filebin, REG_DADO * regDado);
     // Função que escreve um registro de cabeçalho num arquivo binário
     void writeRegCabBin(FILE * fOut, REG_CAB cabecalho);
     // Função que escreve um registro de dados num arquivo binário

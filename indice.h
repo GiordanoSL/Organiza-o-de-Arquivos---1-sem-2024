@@ -28,5 +28,9 @@ Funções que manipulam índice:
     void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq);
     //faz inserção ordenada num vetor de índices
     void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int count);
+    // faz a remoção de um índice em um vetor de índices
+    void remove_indice(REG_DADO_ID ** vetorId, int id, int nroRegArq);
+    // funcao que retorna o offset de um registro de dados a partir da sua chave primaria
+    long get_offset(REG_DADO_ID ** vetorId, int id, int nroRegArq);
 
 #endif

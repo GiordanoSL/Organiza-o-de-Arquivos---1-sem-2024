@@ -90,28 +90,87 @@ void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq){
 }
 
 // Faz inserção ordenada num vetor de índices
-void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int count) {
-    int left = 0;
-    int right = count - 1;
-    int mid;
-    int position = count;  // Padrão: insere no fim
+void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int tam) {
+    int esq = 0;
+    int dir = tam - 1;
+    int meio;
+    int position = tam;  // Posição padrão: inserção no fim
 
     // Busca binária para encontrar a posição de inserção
-    while (left <= right) {
-        mid = (left + right) / 2;
-        if (vetorId[mid]->id < regDadoId->id) {
-            left = mid + 1;
+    while (esq <= dir) {
+        meio = (esq + dir) / 2;
+        if (vetorId[meio]->id < regDadoId->id) {
+            esq = meio + 1;
         } else {
-            right = mid - 1;
+            dir = meio - 1;
         }
     }
-    position = left;  // A posição de inserção será onde left aponta
+    position = esq;  // A posição de inserção será onde esq aponta
 
     // Shift no restante dos elementos para abrir espaço
-    for (int i = count; i > position; i--) {
+    for (int i = tam; i > position; i--) {
         vetorId[i] = vetorId[i - 1];
     }
 
     // Insere o novo elemento na posição correta
     vetorId[position] = regDadoId;
 }
+
+void remove_indice(REG_DADO_ID ** vetorId, int id, int nroRegArq){
+    int meio, dir, esq;
+    esq = 0;
+    dir = nroRegArq - 1;
+
+    // Busca binária para encontrar o id que será removido
+    while (esq <= dir) {
+        meio = (esq + dir) / 2;
+
+        if (vetorId[meio]->id < id)
+            esq = meio + 1;
+
+        else if(vetorId[meio]->id > id)
+            dir = meio - 1;
+
+        else
+            break; // meio = posicao correta
+    }
+
+
+    // verifica se o id foi encontrado
+    if(vetorId[meio]->id == id)
+        // libera a memória utlizada pelo registro de indice
+        free(vetorId[meio]);
+
+        // faz o shift
+        for (int i = meio; i < nroRegArq - 1; i++){
+            vetorId[i] = vetorId[i + 1];        
+        }
+
+}
+
+long get_offset(REG_DADO_ID ** vetorId, int id, int nroRegArq){
+    int meio, dir, esq;
+    esq = 0;
+    dir = nroRegArq - 1;
+
+    // Busca binária para encontrar a posição da chave primária
+    while (esq <= dir) {
+        meio = (esq + dir) / 2;
+
+        if (vetorId[meio]->id < id)
+            esq = meio + 1;
+
+        else if(vetorId[meio]->id > id)
+            dir = meio - 1;
+
+        else
+            break; // meio = posicao correta
+        
+    }
+
+    if(vetorId[meio]->id == id) // verifica se o id foi encontrado, caso tenha sido, retorna o byteoffset associado a ele
+        return vetorId[meio]->byteoffset;
+    else 
+        return -1;
+}
+

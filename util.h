@@ -12,8 +12,10 @@ Funções auxiliares e fornecidas
 
     #include <stdio.h>
     #include <stdlib.h>
+    #include <stdbool.h>
     #include <ctype.h>
     #include <string.h>
+    #include "reg.h"
 
     //funções fornecidas
     void binarioNaTela(char *nomeArquivoBinario);
@@ -24,5 +26,8 @@ Funções auxiliares e fornecidas
     void readQuoteField(char ** string, int * tam);
 
     void preencheLixo(FILE * fDados, int espaco);
+    void lerCamposReg(REG_DADO * reg);
+    bool comparaRegDado(REG_DADO reg1, REG_DADO reg2);
+
 
 #endif

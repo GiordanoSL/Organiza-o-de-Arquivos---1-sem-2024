@@ -111,3 +111,57 @@ void readQuoteField(char ** string, int * tam){
 		*tam = strlen(*string);
 	getchar();
 }
+
+// Função que lê n campos do arquivo de entrada e atribui a uma struct regDado
+void lerCamposReg(REG_DADO * reg){
+
+	int n;
+	// lendo o numero de campos que serao lidos
+	scanf(" %d", &n);
+	getchar(); //descarta o ' ' da entrada
+	
+	char * campo;
+    reg->id = -1;
+    reg->idade = -1;
+    reg->nacionalidade = NULL;
+    reg->nomeClube = NULL;
+    reg->nomeJogador = NULL;
+
+	for (int j = 0; j < n; j++){
+		campo = lerStr();
+		if(!strcmp(campo, "id")){
+			scanf(" %d", &reg->id);
+			getchar(); //descarta o ' ' ou '\n' da entrada
+		}else if (!strcmp(campo, "idade")){
+			scanf(" %d", &reg->idade);
+			getchar(); //descarta o ' ' ou '\n' da entrada
+		}else if (!strcmp(campo, "nacionalidade")){
+			//tenta alocar memoria para o campo caso nao consiga sai do programa
+			if((reg->nacionalidade = (char *) calloc(sizeof(char), 50)) == NULL) exit(1); 
+			scan_quote_string(reg->nacionalidade); // lendo a nacionalidade inserida pelo usuario
+			getchar(); //descarta o ' ' ou '\n' da entrada
+		}else if (!strcmp(campo, "nomeJogador")){
+			//tenta alocar memoria para o campo caso nao consiga sai do programa
+			if((reg->nomeJogador = (char *) calloc(sizeof(char), 50)) == NULL) exit(1);
+			scan_quote_string(reg->nomeJogador); // lendo o nome do jogador inserido pelo usuario
+			getchar(); //descarta o ' ' ou '\n' da entrada
+		}else if (!strcmp(campo, "nomeClube")){
+			//tenta alocar memoria para o campo caso nao consiga sai do programa
+			if((reg->nomeClube = (char *) calloc(sizeof(char), 50)) == NULL) exit(1);
+			scan_quote_string(reg->nomeClube); // lendo o nome do clube inserido pelo usuario
+			getchar(); //descarta o ' ' ou '\n' da entrada
+		}
+		
+		free(campo);
+	}
+}
+
+bool comparaRegDado(REG_DADO reg1, REG_DADO reg2){
+	// Compara todos os campos dos registros, e retorna 'True' caso todos os campos não nulos de reg1 forem iguais aos campos de reg2
+
+	return  (reg1.id == -1 || reg1.id == reg2.id)&& // compara os IDs
+			(reg1.idade == -1 || reg1.idade == reg2.idade)&& // compara as idades
+			(reg1.nacionalidade == NULL || !strcmp(reg1.nacionalidade, reg2.nacionalidade)) && // compara as nacionalidades
+			(reg1.nomeClube == NULL || !strcmp(reg1.nomeClube, reg2.nomeClube))&& // compara os nomes de clube
+			(reg1.nomeJogador == NULL || !strcmp(reg1.nomeJogador, reg2.nomeJogador)); // compara os nomes dos jogadores
+}
