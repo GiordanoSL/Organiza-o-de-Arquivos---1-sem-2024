@@ -19,16 +19,12 @@ void create_table(char * arquivoIn, char * arquivoOut){
         exit(1);
     }
 
-    // Calcula tamanho do arquivo para usar como condição de parada no loop que o percorre
-    fseek(fIn, 0, SEEK_END);
-    long int tamArquivo = ftell(fIn);
-    fseek(fIn, 0, SEEK_SET);
-
     REG_CAB cabecalho;      // receberá o cabecalho
     REG_DADO dados;         // recebera cada registro de dados
     
     // escreve cabecalho com status  = 0 (inconsistente)
     cabecalho.status = '0';
+    cabecalho.nroRegArq = 0;
     writeRegCabBin(fOut, cabecalho);    // escreve cabecalho indicando que arquivo está *inconsistente*
 
     //pula primeira linha do .csv (cabeçalho do csv)
@@ -37,8 +33,8 @@ void create_table(char * arquivoIn, char * arquivoOut){
     }
 
     //lendo todos os valores
-    while (ftell(fIn) != tamArquivo){
-        readRegDadoCsv(fIn, &dados);    // lê o registro de dados do csv
+    while (readRegDadoCsv(fIn, &dados)){ // lê o registro de dados do csv até o fim do arquivo
+            
         writeRegDadoBin(fOut, dados);   // escreve o registro de dados lido no binario
         cabecalho.nroRegArq++;          // incrementa o numero de registros no arquivo
 

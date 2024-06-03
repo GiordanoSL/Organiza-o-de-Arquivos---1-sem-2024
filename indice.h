@@ -2,10 +2,7 @@
 Autores: Giordano Santorum Lorenzetto - nUSP 14574017
          Victor Moreli dos Santos - nUSP 14610514
 
-Funções que manipulam índice:
-    - carregamento: lê um arquivo de índices e o converte num vetor em memória primária
-    - reescrita: reconstrói o arquivo de índices a partir do vetor em memória primária
-    - insert_ordenado: faz inserção ordenada num vetor de índices
+Funções que manipulam índice
 -------------------------------------------------------*/
 
 
@@ -34,7 +31,9 @@ Funções que manipulam índice:
     long get_offset_arqdados(REG_DADO_ID ** vetorId, int id, int nroRegArq);
     // retorna byteoffset no arquivo de INDICE de um registro por busca binária no vetor de indices
     long get_offset_arqindice(REG_DADO_ID ** vetorId, int id, int nroRegArq);
+    // libera a memória alocada para o carregamento dos índices em memória primária
     void desalocaVetorIndices(REG_DADO_ID *** vetorIndices, int tamanho);
+    // preenche um registro de indice com valores fornecidos
     void preencheRegId(REG_DADO_ID * regId, int id, long byteoffset);
 
 #endif

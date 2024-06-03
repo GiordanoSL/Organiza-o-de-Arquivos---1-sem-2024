@@ -13,7 +13,12 @@ int lerIntCsv(FILE * file){
     char aux;
     char * intStr = (char *) malloc(sizeof(char)*9);
     //ler int
-    while((aux = (char) getc(file)) != ','){ // lê até a ,
+    while((aux = (char) getc(file)) != ','){ // lê até a ','
+        if(aux == EOF){
+            // se aux == eof, chegou ao fim do arquivo e não é possível ler o número
+            free(intStr);
+            return -2; // -2 indica que não foi possível ler o número pois acabou o arquivo
+        }
         if(i < 9)
             intStr[i] = aux; // enquanto couber, guarda os caracteres na string
         else{
@@ -55,9 +60,12 @@ int lerStrCsv(FILE * file, char ** dest){
 
 
 // Função que lê um registro de dados de um arquivo csv
-void readRegDadoCsv(FILE * fIn, REG_DADO * dados){
+int readRegDadoCsv(FILE * fIn, REG_DADO * dados){
     //ler id
     dados -> id = lerIntCsv(fIn);
+    if(dados -> id == -2){  // se lerIntCsv retornar -2, quer dizer que chegou ao fim do arquivo
+        return 0;
+    }
     //ler idade
     dados -> idade = lerIntCsv(fIn);
     //ler nome
@@ -72,6 +80,8 @@ void readRegDadoCsv(FILE * fIn, REG_DADO * dados){
     dados -> tamanhoRegistro = 33 + dados -> tamNomeJog + dados -> tamNacionalidade + dados -> tamNomeClube;
 
     dados -> prox = -1;
+
+    return 1; // retorna 1 indicando que a leitura foi feita com sucesso
 }
     
 

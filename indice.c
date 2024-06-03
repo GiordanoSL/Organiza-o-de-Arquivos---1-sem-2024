@@ -98,7 +98,7 @@ void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int tam) {
     int esq = 0;
     int dir = tam - 1;
     int meio;
-    int position = tam;  // Posição padrão: inserção no fim
+    int pos = tam;  // Posição padrão: inserção no fim
 
     // Busca binária para encontrar a posição de inserção
     while (esq <= dir) {
@@ -109,15 +109,15 @@ void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int tam) {
             dir = meio - 1;
         }
     }
-    position = esq;  // A posição de inserção será onde esq aponta
+    pos = esq;  // A posição de inserção será onde esq aponta
 
     // Shift no restante dos elementos para abrir espaço
-    for (int i = tam; i > position; i--) {
+    for (int i = tam; i > pos; i--) {
         vetorId[i] = vetorId[i - 1];
     }
 
     // Insere o novo elemento na posição correta
-    vetorId[position] = regDadoId;
+    vetorId[pos] = regDadoId;
 }
 
 // remove um reigstro de indice do vetor de indices
@@ -146,7 +146,7 @@ void remove_indice(REG_DADO_ID ** vetorId, int id, int nroRegArq){
         // libera a memória utlizada pelo registro de indice
         free(vetorId[meio]);
 
-        // faz o shift
+        // faz o shift (remove o índice do vetor)
         for (int i = meio; i < nroRegArq - 1; i++){
             vetorId[i] = vetorId[i + 1];        
         }

@@ -15,11 +15,6 @@ void select_from(char * arquivobin){
         return;
     }
 
-    // Determinação do tamaho do arquivo
-    fseek(filebin, 0, SEEK_END);
-    long int tamArquivo = ftell(filebin);
-    fseek(filebin, 0, SEEK_SET);
-
     REG_CAB regCab; // Declara registro de cabeçalho
     readRegCabBin(filebin, &regCab); // Lê registro de cabeçalho
 
@@ -39,9 +34,7 @@ void select_from(char * arquivobin){
 
     REG_DADO regDado; // Declara registro de dados
 
-    while(ftell(filebin) != tamArquivo){
-        // Lê os registros de dados
-        readRegDadoBin(filebin, &regDado); // Lê registro de dados
+    while(readRegDadoBin(filebin, &regDado)){ // Lê registro de dados um por um até chegar ao fim do arquivo
 
         if(regDado.removido == '0'){ // se o registro lido não estiver removido, imprime na saida padrão
             printf("Nome do Jogador: %s\n", regDado.tamNomeJog == 0 ? "SEM DADO" : regDado.nomeJogador);
@@ -70,11 +63,6 @@ void select_from_where(char * arquivobin, int num_buscas){
         return;
     }
 
-    // Determinação do tamanho do arquivo
-    fseek(filebin, 0, SEEK_END);
-    long int tamArquivo = ftell(filebin);
-    fseek(filebin, 0, SEEK_SET);
-
     REG_CAB regCab; // Declara registro de cabeçalho
     readRegCabBin(filebin, &regCab); // Lê registro de cabeçalho
 
@@ -96,64 +84,23 @@ void select_from_where(char * arquivobin, int num_buscas){
 
     REG_DADO regDado; // struct q armazenará temporariamente registros de dados lidos do arquivo e entrada
 
-
-    int num_campos; // qtd de campos que serão lidos na busca
-    char * campo; // nome do campo que será lido na busca
     char reg_encontrado = 0; // flag para determinar se ao menos 1 registro foi encontrado
     
     for(int i = 1; i <= num_buscas; i++){
 
         // Inicio da i-esima busca
         printf("Busca %d\n\n", i);
-
-        // lendo o numero de campos que serao lidos
-        scanf(" %d", &num_campos);
-        getchar(); //descarta o ' ' da entrada
         
         // lendo os campos e seus valores, e atribuindo eles ao registro modelo
-        for (int j = 0; j < num_campos; j++){
-            campo = lerStr();
-            if(!strcmp(campo, "id")){
-                scanf(" %d", &regDadoModelo.id);
-                getchar(); //descarta o ' ' ou '\n' da entrada
-            }else if (!strcmp(campo, "idade")){
-                scanf(" %d", &regDadoModelo.idade);
-                getchar(); //descarta o ' ' ou '\n' da entrada
-            }else if (!strcmp(campo, "nacionalidade")){
-                //tenta alocar memoria para o campo caso nao consiga sai do programa
-                if((regDadoModelo.nacionalidade = (char *) calloc(sizeof(char), 50)) == NULL) exit(1); 
-                scan_quote_string(regDadoModelo.nacionalidade); // lendo a nacionalidade inserida pelo usuario
-                getchar(); //descarta o ' ' ou '\n' da entrada
-            }else if (!strcmp(campo, "nomeJogador")){
-                //tenta alocar memoria para o campo caso nao consiga sai do programa
-                if((regDadoModelo.nomeJogador = (char *) calloc(sizeof(char), 50)) == NULL) exit(1);
-                scan_quote_string(regDadoModelo.nomeJogador); // lendo o nome do jogador inserido pelo usuario
-                getchar(); //descarta o ' ' ou '\n' da entrada
-            }else if (!strcmp(campo, "nomeClube")){
-                //tenta alocar memoria para o campo caso nao consiga sai do programa
-                if((regDadoModelo.nomeClube = (char *) calloc(sizeof(char), 50)) == NULL) exit(1);
-                scan_quote_string(regDadoModelo.nomeClube); // lendo o nome do clube inserido pelo usuario
-                getchar(); //descarta o ' ' ou '\n' da entrada
-            }
-            
-            free(campo);
-        }
+        lerCamposRegParcial(&regDadoModelo);
 
         // flag de registro encontrado = 0
         reg_encontrado = 0;
-        while(ftell(filebin) != tamArquivo){
-
-            // Lê o registro de dados do arquivo binario
-            readRegDadoBin(filebin, &regDado);
+        while(readRegDadoBin(filebin, &regDado)){ // Lê registro de dados um por um até chegar ao fim do arquivo
 
             // se o registro lido nao estiver removido, compara com o registro modelo 
             if(regDado.removido == '0'){
-                if((regDadoModelo.id == -1 || regDado.id == regDadoModelo.id) && // compara id caso o id do modelo nao for nulo
-                (regDadoModelo.idade == -1 || regDado.idade == regDadoModelo.idade)&& // compara idade caso a idade do modelo nao for nula
-                (regDadoModelo.nacionalidade == NULL || !strcmp(regDado.nacionalidade, regDadoModelo.nacionalidade)) && // compara nacionalidade caso a nacionalidade do modelo nao for nula
-                (regDadoModelo.nomeClube == NULL || !strcmp(regDado.nomeClube, regDadoModelo.nomeClube))&& // compara nomeClube caso o nomeClube do modelo nao for nulo
-                (regDadoModelo.nomeJogador == NULL || !strcmp(regDado.nomeJogador, regDadoModelo.nomeJogador))) // compara nomeJog caso o nomeJog do modelo nao for nulo
-                {
+                if(comparaRegDado(regDadoModelo, regDado)){ // compara nomeJog caso o nomeJog do modelo nao for nulo
                     printf("Nome do Jogador: %s\n", regDado.tamNomeJog == 0 ? "SEM DADO" : regDado.nomeJogador);
                     printf("Nacionalidade do Jogador: %s\n", regDado.tamNacionalidade == 0 ? "SEM DADO" : regDado.nacionalidade);
                     printf("Clube do Jogador: %s\n", regDado.tamNomeClube == 0 ? "SEM DADO" : regDado.nomeClube);

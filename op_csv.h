@@ -2,7 +2,7 @@
 Autores: Giordano Santorum Lorenzetto - nUSP 14574017
          Victor Moreli dos Santos - nUSP 14610514
 
-// Operações em CSV
+Operações em CSV
 -------------------------------------------------------*/
 
 
@@ -20,7 +20,7 @@ Autores: Giordano Santorum Lorenzetto - nUSP 14574017
     int lerStrCsv(FILE * file, char ** dest);
     // Função que lê um inteiro de um arquivo csv
     int lerIntCsv(FILE * file);
-    // Função que lê um registro de dados de um arquivo csv
-    void readRegDadoCsv(FILE * fIn, REG_DADO * dados);
+    // Função que lê um registro de dados de um arquivo csv, retorna 0 se não foi possível ler o registro
+    int readRegDadoCsv(FILE * fIn, REG_DADO * dados);
 
 #endif
