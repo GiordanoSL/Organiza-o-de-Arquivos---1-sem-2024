@@ -6,6 +6,8 @@ Autores: Giordano Santorum Lorenzetto - nUSP 14574017
 
 #include "insert.h"
 
+void insere_reg_dado(FILE * fDados, REG_DADO_ID ** vetorIndices, REG_DADO regDadoAux, REG_DADO_ID * regIdAux, REG_CAB * regCabDados);
+
 void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
     FILE *fDados = fopen(arquivoDados, "rb+");      // abre arquivo de dados para leitura e escrita
     if (fDados == NULL) {
@@ -37,126 +39,130 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
         return;
     }
 
-    // faz carregamento do arquivo de índices para a memória primária (vetorIndices), status = 0
+    // faz carregamento do arquivo de índices para a memória primária (vetorIndices), status do arquivo de índices = 0
     REG_DADO_ID ** vetorIndices = carregamento(fId, regCabDados.nroRegArq, numInsert); // já aloca espaço para as inserções no vetor
 
+    // Atualiza status do arquivo de dados para inconsistente
+    regCabDados.status = '0';
+    fseek(fDados, 0, SEEK_SET);
+    writeRegCabBin(fDados, regCabDados);
+
     REG_DADO regDadoAux;    // registro de dados auxiliar para inserção no arquivo de dados
-    
+
+    int menorId;
+
+    for (int i = 0; i < numInsert; i++) {
+        // Lê todos os campos do registro de dados a ser inserido
+        lerCamposRegCompleto(&regDadoAux);
+
+        // aloca nova struct auxiliar de registro de índice para ser inserida no vetor
+        REG_DADO_ID * regIdAux = (REG_DADO_ID *) malloc(sizeof(REG_DADO_ID));
+
+        // função que:
+        // - insere no registro de dados
+        // - preenche registro de indice com as informações corretas e o insere no vetor de indices
+        // - atualiza registro de cabecalho do arquivo de dados se necessario
+        insere_reg_dado(fDados, vetorIndices, regDadoAux, regIdAux, &regCabDados);
+
+        // atualiza o menor indice que foi inserido -> reconstrucao do arquivo de indices deve comecar a partir do menor indice inserido!
+        if(i == 0 || regIdAux->id < menorId)
+            menorId = regIdAux->id;
+
+        // libera memória das strings de regDadoAux
+        free(regDadoAux.nomeJogador);
+        free(regDadoAux.nacionalidade);
+        free(regDadoAux.nomeClube);
+    }
+
+    regCabDados.status = '1';           // atualiza o status para consistente
+    fseek(fDados, 0, SEEK_SET);         // vai para o início
+    writeRegCabBin(fDados, regCabDados);    // escreve novo cabeçalho
+
+    reescrita(fId, vetorIndices, regCabDados.nroRegArq, menorId);    // reescreve arquivo de índices a partir do vetor, status = 1
+
+    desalocaVetorIndices(&vetorIndices, regCabDados.nroRegArq);
+
+    // fecha os arquivos
+    fclose(fDados);
+    fclose(fId);
+
+    // binario na tela para os arquivos
+    binarioNaTela(arquivoDados);
+    binarioNaTela(arquivoIndice);
+}
+
+// função que:
+// - insere registro de dados (regDadoAux) no arquivo de dados (fDados)
+// - preenche registro de indice (regIdAux) com as informações corretas e o insere no vetor de indices (vetorIndices)
+// - atualiza registro de cabecalho do arquivo de dados (regCabDados)
+void insere_reg_dado(FILE * fDados, REG_DADO_ID ** vetorIndices, REG_DADO regDadoAux, REG_DADO_ID * regIdAux, REG_CAB * regCabDados){
     // variáveis auxiliares para uso na inserção
     int tam;    // tamanho do arquivo onde a busca se encontra
+    int dif;
     long prox;  // byteoffset do proximo da lista de removidos
-    char removido;  // usado para pular char de removido dos registros
+    //char removido;  // usado para pular char de removido dos registros
     long pos, ant;  // pos - byteoffset do atual, ant - byteoffset do anterior 
-    char flagInsertFim = '0';   // flag de inserção no fim após percorrer toda a lista
 
-    for (int i = 1; i <= numInsert; i++) {
-        // Inicializando e lendo os campos fornecidos pelo usuário
+    if (regCabDados->nroRegRem == 0) {   // Se não houver registros removidos, insere no fim
+        // Inserir no fim
+        preencheRegId(regIdAux, regDadoAux.id, regCabDados->proxByteOffset); // preenche registro de indice auxiliar
+        insereFimArqDados(fDados, regCabDados, regDadoAux); // insere registro de dados no fim do arquivo, atualiza proxByteOffset do cabecalho
+        insert_ordenado(vetorIndices, regIdAux, regCabDados->nroRegArq);  // insere ordenado no vetor de índices
 
-        REG_DADO_ID * regDadoIdAux = (REG_DADO_ID *) malloc(sizeof(REG_DADO_ID));   // registro de índices auxiliar para inserção no vetor de índices
-        
-        // Lê o id
-        char id[50];
-        scan_quote_string(id);
-        regDadoAux.id = atoi(id);
+    } else {    // Se há registros removidos, possível reaproveitamento de espaço
 
-        // Preenche id do registro de índice auxiliar
-        regDadoIdAux->id = regDadoAux.id;
-        
-        getchar();  // pula o espaço
+        // Possível inserção em espaço reaproveitado
 
-        // Lê a idade
-        char idade[10];
-        scan_quote_string(idade);   // retorna "" se for NULO
-        if(strcmp(idade, "") == 0) strcpy(idade, "-1"); // Se for "", preenche com -1
-        regDadoAux.idade = atoi(idade);
+        fseek(fDados, regCabDados->topo + 1, SEEK_SET);  // vai para o topo da lista dos logicamente removidos, pulando o char de removido
+        ant = regCabDados->topo;                     // salva o anterior
+        //fread(&removido, sizeof(char), 1, fDados);  // pula o removido
+        fread(&tam, sizeof(int), 1, fDados);        // lê o tamanho do registro atual
 
-        getchar();  // pula o espaço
+        // se o tamanho do registro logicamente removido for maior que o tamanho do registro que será inserido
+        if (tam >= regDadoAux.tamanhoRegistro) {
+            // Inserir no topo
 
-        // Lê o nome do jogador e salva o tamanho
-        readQuoteField(&(regDadoAux.nomeJogador), &(regDadoAux.tamNomeJog));
+            dif = tam - regDadoAux.tamanhoRegistro; // calcula diferença de tamanho entre o espaço disponível e o registro
+            regDadoAux.tamanhoRegistro = tam;           // novo tamanho do registro é o espaço disponível
+            fread(&prox, sizeof(long), 1, fDados);      // lê o próximo
+            regCabDados->topo = prox;                    // o topo recebe o próximo da lista de removidos
+            fseek(fDados, ant, SEEK_SET);               // volto para o anterior (nesse caso, é o início do registro que estava no topo)
+            writeRegDadoBin(fDados, regDadoAux);        // escreve registro
+            preencheLixo(fDados, dif);                  // preenche lixo ($)
+            preencheRegId(regIdAux, regDadoAux.id, ant);
+            //regIdAux->byteoffset = ant;             // preenche byteoffset do registro auxiliar de índice
+            insert_ordenado(vetorIndices, regIdAux, regCabDados->nroRegArq); // insere ordenado no vetor de índices
+            regCabDados->nroRegRem--;  // diminui nro de removidos do arquivo de dados
 
-        // Lê a nacionalidade e salva o tamanho
-        readQuoteField(&(regDadoAux.nacionalidade), &(regDadoAux.tamNacionalidade));
-
-        // Lê o nome do clube e salva o tamanho
-        readQuoteField(&(regDadoAux.nomeClube), &(regDadoAux.tamNomeClube));
-
-        regDadoAux.removido = '0';  // não removido logicamente
-        regDadoAux.tamanhoRegistro = 33 + regDadoAux.tamNomeJog + regDadoAux.tamNacionalidade + regDadoAux.tamNomeClube;    // calcula tamanho
-        regDadoAux.prox = -1;       // inicializa prox com -1
-
-
-        if (regCabDados.nroRegRem == 0) {   // Se não houver registros removidos, insere no fim
-            // Inserir no fim
+        } else {        // inserção não ocorrerá no topo
             
-            fseek(fDados, regCabDados.proxByteOffset, SEEK_SET);    // pula para o próximo byte offset vazio para inserção (fim do arquivo) disponível no cabecalho
-            regDadoIdAux->byteoffset = regCabDados.proxByteOffset;  // preenche byteoffset do registro de índice auxiliar
-            writeRegDadoBin(fDados, regDadoAux);                    // escreve registro de dados
-            regCabDados.proxByteOffset += regDadoAux.tamanhoRegistro; // atualiza próximo byteoffset vazio para inserção
-            insert_ordenado(vetorIndices, regDadoIdAux, regCabDados.nroRegArq + i - 1);  // insere ordenado no vetor de índices
-        } else {    // Se há registros removidos, possível reaproveitamento de espaço
-            // Possível inserção em espaço reaproveitado
-            fseek(fDados, regCabDados.topo, SEEK_SET);  // vai para o topo da lista dos logicamente removidos
-            ant = regCabDados.topo;                     // salva o anterior
-            fread(&removido, sizeof(char), 1, fDados);  // pula o removido
-            fread(&tam, sizeof(int), 1, fDados);        // lê o tamanho
-
-            // se o tamanho do registro logicamente removido for maior que o tamanho do registro que será inserido
-            if (tam >= regDadoAux.tamanhoRegistro) {
-                // Inserir no topo
-
-                int dif = tam - regDadoAux.tamanhoRegistro; // calcula diferença de tamanho entre o espaço disponível e o registro
-                regDadoAux.tamanhoRegistro = tam;           // novo tamanho do registro é o espaço disponível
-                fread(&prox, sizeof(long), 1, fDados);      // lê o próximo
-                regCabDados.topo = prox;                    // o topo recebe o próximo da lista de removidos
-                fseek(fDados, ant, SEEK_SET);               // volto para o anterior (nesse caso, é o início do registro que estava no topo)
-                writeRegDadoBin(fDados, regDadoAux);        // escreve registro
-                preencheLixo(fDados, dif);                  // preenche lixo ($)
-                regDadoIdAux->byteoffset = ant;             // preenche byteoffset do registro auxiliar de índice
-                insert_ordenado(vetorIndices, regDadoIdAux, regCabDados.nroRegArq + i - 1); // insere ordenado no vetor de índices
-                regCabDados.nroRegRem = regCabDados.nroRegRem - 1;  // diminui nro de removidos do arquivo de dados
-
-            } else {        // inserção não ocorrerá no topo
+            while (tam < regDadoAux.tamanhoRegistro) {      // enquanto o tamanho do registro onde se encontra é menor do que o que será inserido
                 
-                while (tam < regDadoAux.tamanhoRegistro) {      // enquanto o tamanho do registro onde se encontra é menor do que o que será inserido
-                    
-                    ant = ftell(fDados);    //ant guarda posição do anterior antes do campo prox 
-                    fread(&prox, sizeof(long), 1, fDados);  // lê o próximo
+                ant = ftell(fDados);    //ant guarda posição do anterior antes do campo prox 
+                fread(&prox, sizeof(long), 1, fDados);  // lê o próximo
 
-                    if (prox != -1) {   // se não estou no fim da lista
+                if(prox == -1)
+                    break;
 
-                        fseek(fDados, prox, SEEK_SET);  // vai para o próximo
-                        pos = prox;                     // atualiza posição atual
-                        fread(&removido, sizeof(char), 1, fDados); // pula o removido
-                        fread(&tam, sizeof(int), 1, fDados);       // lê o tamanho
+                fseek(fDados, prox + 1, SEEK_SET);  // vai para o próximo, já pulando o char de removido
+                pos = prox;                     // atualiza posição atual para o inicio do registro atual
+                //fread(&removido, sizeof(char), 1, fDados); // pula o removido
+                fread(&tam, sizeof(int), 1, fDados);       // lê o tamanho
 
-                    } else {                // se estou no fim da lista
+            }
 
-                        // Lista acabou, insere no fim
-                        
-                        fseek(fDados, regCabDados.proxByteOffset, SEEK_SET);    // pula para o próximo byte offset vazio para inserção (fim do arquivo) disponível no cabecalho
-                        regDadoIdAux->byteoffset = regCabDados.proxByteOffset;  // preenche byteoffset do registro de índice auxiliar
-                        writeRegDadoBin(fDados, regDadoAux);                    // escreve registro
-                        regCabDados.proxByteOffset += regDadoAux.tamanhoRegistro;   // atualiza próximo byteoffset vazio para inserção
-                        flagInsertFim = '1';          // flag para indicar inserção no fim quando a lista foi percorrida e não foi possível reaproveitar espaço
-                        insert_ordenado(vetorIndices, regDadoIdAux, regCabDados.nroRegArq + i - 1); // insere ordenado no vetor de índices
-                        break;  // sai do while
+            // saiu em posição disponível para reaproveitamento ou chegou no fim da lista
 
-                    }
-                }
+            if (prox == (long) -1){  // inserção no fim da lista
 
-                // saiu em posição disponível para reaproveitamento ou inseriu no fim após chegar no fim da lista
-
-                if (flagInsertFim == '1'){  // inserção no fim da lista, liberado memória do registro auxiliar e vai pra próxima inserção
-                    free(regDadoAux.nomeJogador);
-                    free(regDadoAux.nacionalidade);
-                    free(regDadoAux.nomeClube);
-                    continue;   // próxima inserção
-                }
-                    
+                // Inserir no fim
+                preencheRegId(regIdAux, regDadoAux.id, regCabDados->proxByteOffset); // preenche registro de indice auxiliar
+                insereFimArqDados(fDados, regCabDados, regDadoAux); // insere registro de dados no fim do arquivo, atualiza proxByteOffset do cabecalho
+                insert_ordenado(vetorIndices, regIdAux, regCabDados->nroRegArq);  // insere ordenado no vetor de índices
                 
-                // Insere no "meio" da lista, com aproveitamento de espaço
-                
+            } else {
+                // Insere no "meio" da lista, com re-aproveitamento de espaço
+            
                 int dif = tam - regDadoAux.tamanhoRegistro; // salva diferença entre espaço disponível e tamanho do registro
                 regDadoAux.tamanhoRegistro = tam;   // novo tamanho do registro = espaço disponível
 
@@ -168,46 +174,13 @@ void insert_into(char *arquivoDados, char *arquivoIndice, int numInsert) {
 
                 writeRegDadoBin(fDados, regDadoAux); // escreve novo registro
                 preencheLixo(fDados, dif);  // preenche lixo
-                regCabDados.nroRegRem = regCabDados.nroRegRem - 1; // diminui nro de removidos do arquivo de dados 
-                regDadoIdAux->byteoffset = pos; // preenche byteoffset do registro de índice auxiliar
-                insert_ordenado(vetorIndices, regDadoIdAux, regCabDados.nroRegArq + i - 1); // insere ordenado no vetor de índices
+                regCabDados->nroRegRem--; // diminui nro de removidos do arquivo de dados 
+                preencheRegId(regIdAux, regDadoAux.id, pos); // preenche byteoffset e id do registro de índice auxiliar
+                insert_ordenado(vetorIndices, regIdAux, regCabDados->nroRegArq); // insere ordenado no vetor de índices
             }
         }
-
-        // libera memória nos casos inserção no topo, inserção no fim c/ nro de removidos = 0, inserção no "meio"
-        free(regDadoAux.nomeJogador);
-        free(regDadoAux.nacionalidade);
-        free(regDadoAux.nomeClube);
     }
 
-    regCabDados.nroRegArq += numInsert; // atualiza número de registros no arquivo
-    fseek(fDados, 0, SEEK_SET);         // vai para o início
-    writeRegCabBin(fDados, regCabDados);    // escreve novo cabeçalho
+    regCabDados->nroRegArq++; // atualiza cabecalho com novo numero de registros arquivados 
 
-    // Fecha o arquivo de índices para criá-lo novamente a partir do recarregamento do vetor de índices que está em memória primária
-    fclose(fId);
-    // Abertura do arquivo de indice, agora para escrita (exclui o anterior)
-    fId = fopen(arquivoIndice, "wb");
-    if(fId == NULL){
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
-    reescrita(fId, vetorIndices, regCabDados.nroRegArq);    // reescreve arquivo de índices a partir do vetor, status = 1
-
-    // liberação de memória do vetor de índices
-    for (int i = 0; i < regCabDados.nroRegArq; i++)
-    {
-        free(vetorIndices[i]);
-        vetorIndices[i] = NULL;
-    }
-    free(vetorIndices);
-    vetorIndices = NULL;
-
-    // fecha os arquivos
-    fclose(fDados);
-    fclose(fId);
-
-    // binario na tela para os arquivos
-    binarioNaTela(arquivoDados);
-    binarioNaTela(arquivoIndice);
 }

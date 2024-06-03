@@ -155,3 +155,10 @@ void writeRegDadoId(FILE * file, REG_DADO_ID dados){
     // escrever byteoffset
     fwrite(&(dados.byteoffset), sizeof(long), 1, file);
 }
+
+// Insere um registro no fim do arquivo de dados
+void insereFimArqDados(FILE * fDados, REG_CAB * regCabDados, REG_DADO regDado){
+    fseek(fDados, regCabDados->proxByteOffset, SEEK_SET);    // pula para o próximo byte offset vazio para inserção (fim do arquivo) disponível no cabecalho
+    writeRegDadoBin(fDados, regDado);                    // escreve registro de dados
+    regCabDados->proxByteOffset += regDado.tamanhoRegistro; // atualiza próximo byteoffset vazio para inserção
+}

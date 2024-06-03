@@ -25,12 +25,16 @@ Funções que manipulam índice:
     //                      * O uso desse argumento evita reallocs nos casos de inserção  
     REG_DADO_ID ** carregamento(FILE * fId, int nroRegArq, int numInsert);
     //reconstrói o arquivo de índices a partir do vetor em memória primária
-    void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq);
+    void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq, int menorId);
     //faz inserção ordenada num vetor de índices
     void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int count);
     // faz a remoção de um índice em um vetor de índices
     void remove_indice(REG_DADO_ID ** vetorId, int id, int nroRegArq);
     // funcao que retorna o offset de um registro de dados a partir da sua chave primaria
-    long get_offset(REG_DADO_ID ** vetorId, int id, int nroRegArq);
+    long get_offset_arqdados(REG_DADO_ID ** vetorId, int id, int nroRegArq);
+    // retorna byteoffset no arquivo de INDICE de um registro por busca binária no vetor de indices
+    long get_offset_arqindice(REG_DADO_ID ** vetorId, int id, int nroRegArq);
+    void desalocaVetorIndices(REG_DADO_ID *** vetorIndices, int tamanho);
+    void preencheRegId(REG_DADO_ID * regId, int id, long byteoffset);
 
 #endif

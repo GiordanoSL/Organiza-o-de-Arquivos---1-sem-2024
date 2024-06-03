@@ -128,14 +128,10 @@ bool create_index(char * arquivoDados, char * arquivoIndice){
     }
 
     // estando o vetor devidamente ordenado com todos os registros de dados de indice, reescreve o arquivo de indices
-    reescrita(fId, vetorId, reg_cab.nroRegArq);     // ao final da reescrita: status = '1'
+    reescrita(fId, vetorId, reg_cab.nroRegArq, 0);     // ao final da reescrita: status = '1'
 
     // libera memoria do vetor de registros de índice
-    for (int i = 0; i < count; i++)
-    {
-        free(vetorId[i]);
-        vetorId[i] = NULL;
-    }
+    desalocaVetorIndices(&vetorId, count);
     free(vetorId);
     vetorId = NULL;
     

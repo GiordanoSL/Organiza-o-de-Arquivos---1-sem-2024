@@ -91,6 +91,7 @@ char * lerStr(){
     return str;
 }
 
+// Função que preenche o espaço no arquivo de dados com '$'
 void preencheLixo(FILE * fDados, int espaco){
 	char lixo = '$';
 	for (int i = 0; i < espaco; i++)
@@ -112,8 +113,10 @@ void readQuoteField(char ** string, int * tam){
 	getchar();
 }
 
-// Função que lê n campos do arquivo de entrada e atribui a uma struct regDado
-void lerCamposReg(REG_DADO * reg){
+// Função que lê n campos do arquivo de entrada e atribui a uma struct reg, 'parcial' pois é usada quando
+// não é necessário informar todos os campos do registro.
+// lê nro de campos -> nome do campo -> valor do campo
+void lerCamposRegParcial(REG_DADO * reg){
 
 	int n;
 	// lendo o numero de campos que serao lidos
@@ -156,6 +159,40 @@ void lerCamposReg(REG_DADO * reg){
 	}
 }
 
+// Função que lê todos campos do arquivo de entrada e atribui a uma struct reg, 'completo' pois é usada quando
+// são informados todos os campos do registro, mesmo quando este é 'NULO'
+// lê id -> idade -> nome do jogador -> nacionalidade -> nome do clube
+void lerCamposRegCompleto(REG_DADO * reg){
+	// Lê o id
+	char id[20];
+	scan_quote_string(id);
+	reg->id = atoi(id);
+	
+	getchar();  // pula o espaço
+
+	// Lê a idade
+	char idade[10];
+	scan_quote_string(idade);   // retorna "" se for NULO
+	if(strcmp(idade, "") == 0) strcpy(idade, "-1"); // Se for "", preenche com -1
+	reg->idade = atoi(idade);
+
+	getchar();  // pula o espaço
+
+	// Lê o nome do jogador e salva o tamanho
+	readQuoteField(&(reg->nomeJogador), &(reg->tamNomeJog));
+
+	// Lê a nacionalidade e salva o tamanho
+	readQuoteField(&(reg->nacionalidade), &(reg->tamNacionalidade));
+
+	// Lê o nome do clube e salva o tamanho
+	readQuoteField(&(reg->nomeClube), &(reg->tamNomeClube));
+
+	reg->removido = '0';  // não removido logicamente
+	reg->tamanhoRegistro = 33 + reg->tamNomeJog + reg->tamNacionalidade + reg->tamNomeClube;    // calcula tamanho
+	reg->prox = -1;       // inicializa prox com -1
+}
+
+// Compara dois registros campo a campo
 bool comparaRegDado(REG_DADO reg1, REG_DADO reg2){
 	// Compara todos os campos dos registros, e retorna 'True' caso todos os campos não nulos de reg1 forem iguais aos campos de reg2
 

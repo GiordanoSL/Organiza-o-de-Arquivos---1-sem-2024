@@ -36,6 +36,8 @@ Operações em binários
     void writeRegDadoId(FILE * file, REG_DADO_ID dados);
     // Função que lê um registro de dados p/ índice de um arquivo de dados, preenchendo regDadoId
     bool readRegDadoIdFromSrc(FILE * filebin, REG_DADO_ID * regDadoId);
+    // Insere um registro no fim do arquivo de dados
+    void insereFimArqDados(FILE * fDados, REG_CAB * regCabDados, REG_DADO regDado);
 
 
 #endif

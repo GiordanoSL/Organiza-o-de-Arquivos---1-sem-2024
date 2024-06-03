@@ -60,8 +60,9 @@ REG_DADO_ID ** carregamento(FILE * fId, int nroRegArq, int numInsert){
     return vetorId;                 // retorna vetor
 }
 
-// Reconstrói o arquivo de índices a partir do vetor em memória primária 
-void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq){
+// Reconstrói o arquivo de índices com base no vetor em memória primária 
+// reconstrucao do arquivo de indices deve comecar a partir do menor indice inserido!
+void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq, int menorId){
     if(fId == NULL || vetorId == NULL){                    // arquivo de indice inválido ou vetor inválido
         printf("Falha no processamento do arquivo.\n");
         return;
@@ -78,10 +79,13 @@ void reescrita(FILE * fId, REG_DADO_ID ** vetorId, int nroRegArq){
     regCabId.status = '0';
     writeRegCabId(fId, regCabId);   // arquivo de índice aberto para reescrita -> arquivo *inconsistente*
 
+    fseek(fId, get_offset_arqindice(vetorId, menorId, nroRegArq), SEEK_SET);
+
     // for que percorre o vetor de registros de índice, reescrevendo o arquivo
     for (int i = 0; i < nroRegArq; i++){
-        writeRegDadoId(fId, *(vetorId[i]));    // reescreve arquivo de índice
-    }
+        if(vetorId[i]->id >= menorId)              // reescreve arquivo de indice a partir do menor indice alterado
+            writeRegDadoId(fId, *(vetorId[i]));   
+    }               
 
     regCabId.status = '1';
     fseek(fId, 0, SEEK_SET);                // retorna para o início do arquivo
@@ -116,6 +120,7 @@ void insert_ordenado(REG_DADO_ID ** vetorId, REG_DADO_ID * regDadoId, int tam) {
     vetorId[position] = regDadoId;
 }
 
+// remove um reigstro de indice do vetor de indices
 void remove_indice(REG_DADO_ID ** vetorId, int id, int nroRegArq){
     int meio, dir, esq;
     esq = 0;
@@ -148,7 +153,8 @@ void remove_indice(REG_DADO_ID ** vetorId, int id, int nroRegArq){
 
 }
 
-long get_offset(REG_DADO_ID ** vetorId, int id, int nroRegArq){
+// retorna byteoffset no arquivo de DADOS de um registro por busca binária no vetor de indices
+long get_offset_arqdados(REG_DADO_ID ** vetorId, int id, int nroRegArq){
     int meio, dir, esq;
     esq = 0;
     dir = nroRegArq - 1;
@@ -174,3 +180,47 @@ long get_offset(REG_DADO_ID ** vetorId, int id, int nroRegArq){
         return -1;
 }
 
+// retorna byteoffset no arquivo de INDICE de um registro por busca binária no vetor de indices
+long get_offset_arqindice(REG_DADO_ID ** vetorId, int id, int nroRegArq){
+    int meio, dir, esq;
+    esq = 0;
+    dir = nroRegArq - 1;
+
+    // Busca binária para encontrar a posição da chave primária
+    while (esq <= dir) {
+        meio = (esq + dir) / 2;
+
+        if (vetorId[meio]->id < id)
+            esq = meio + 1;
+
+        else if(vetorId[meio]->id > id)
+            dir = meio - 1;
+
+        else
+            break; // meio = posicao correta
+    }
+
+    if(vetorId[meio]->id == id) // verifica se o id foi encontrado, caso tenha sido, retorna o byteoffset dele no arquivo de indice
+        return TAM_REG_CAB_ID + meio * (sizeof(int) + sizeof(long));
+    else 
+        return -1;
+}
+
+// desaloca vetor de indices
+void desalocaVetorIndices(REG_DADO_ID *** vetorIndices, int tamanho){
+    // liberação de memória do vetor de índices
+    for (int i = 0; i < tamanho; i++){
+        free((*vetorIndices)[i]);
+        (*vetorIndices)[i] = NULL;
+    }
+    free(*vetorIndices);
+    *vetorIndices = NULL;
+}
+
+// preenche um registro de indice com valores fornecidos
+void preencheRegId(REG_DADO_ID * regId, int id, long byteoffset){
+    // Preenche id do registro de índice
+    regId->id = id;
+    // Preenche o byteoffset do registro de índice
+    regId->byteoffset = byteoffset;
+}

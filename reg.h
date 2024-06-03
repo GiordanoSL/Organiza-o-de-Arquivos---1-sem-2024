@@ -13,7 +13,9 @@ Define registros de dados e de cabeçalho, tanto para arquivo de dados quanto pa
     // Esse arquivo define as structs do registro de cabecalho e do registro de dados
     
     #define TAM_REG_CAB 25      // tamanho do registro de cabecalho
-    
+    #define TAM_REG_CAB_ID 1    // tamanho do registro de cabecalho de indice
+
+
     typedef struct reg_cabecalho_ REG_CAB;
     typedef struct reg_dados_ REG_DADO;
     typedef struct reg_cabecalho_id_ REG_CAB_ID;

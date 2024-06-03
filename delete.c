@@ -65,12 +65,12 @@ void delete_from_where(char * arquivoBinario, char * arquivoIndice, int numRem){
     for(int i = 0; i < numRem; i++){
 
         // lendo os campos e seus valores, e atribuindo eles ao registro modelo
-        lerCamposReg(&regDadoModelo);
+        lerCamposRegParcial(&regDadoModelo);
 
         // se o campo ID for especificado, o arquivo de indices é utilizado para a busca
         if(regDadoModelo.id != -1){
             // busca binaria do offset a partir do ID
-            long offset = get_offset(vetorIndices, regDadoModelo.id, regCab.nroRegArq);
+            long offset = get_offset_arqdados(vetorIndices, regDadoModelo.id, regCab.nroRegArq);
             // se o ID for encontrado faz a remoção
             if(offset != -1){
                 // le o registro de dados no offset correto para comparar com os outros campos especificados
@@ -127,21 +127,14 @@ void delete_from_where(char * arquivoBinario, char * arquivoIndice, int numRem){
         return;
     }
     //reescrita a partir do vetor de índices atualizado
-    reescrita(fId, vetorIndices, regCab.nroRegArq);
+    reescrita(fId, vetorIndices, regCab.nroRegArq, 0);
 
     // Remoções realizadas com sucesso, status do arquivo volta para consistente 
     regCab.status = '1';    
     fseek(fBin, 0, SEEK_SET); // volta para o inicio do arquivo e atualiza o registro de cabeçalho
     writeRegCabBin(fBin, regCab);
 
-    // liberação de memória do vetor de índices
-    for (int i = 0; i < regCab.nroRegArq; i++)
-    {
-        free(vetorIndices[i]);
-        vetorIndices[i] = NULL;
-    }
-    free(vetorIndices);
-    vetorIndices = NULL;
+    desalocaVetorIndices(&vetorIndices, regCab.nroRegArq);
 
     //fecha os arquivos
     fclose(fBin);
