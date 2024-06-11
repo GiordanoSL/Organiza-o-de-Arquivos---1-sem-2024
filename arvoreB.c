@@ -67,6 +67,9 @@ void escreverNo(FILE * arquivo, long rrn, NoArvoreB *no) {
 }
 
 void lerNo(FILE * arquivo, long rrn, NoArvoreB *no) {
+    if(rrn == -1)
+        return;
+
     fseek(arquivo, rrn * TAM_REGISTRO + TAM_CAB_ARVOREB, SEEK_SET);
     fread(&(no->dados.alturaNo), sizeof(int), 1, arquivo);
     fread(&(no->dados.nroChaves), sizeof(int), 1, arquivo);
@@ -95,9 +98,11 @@ void lerCabArvoreB(FILE * arquivo, CabecalhoArvoreB *cabecalho) {
     fread(cabecalho->lixo, sizeof(char), 47, arquivo);
 }
 
+void printRaiz(ArvoreB * arvore, FILE * arquivo);
+
 // Funções de inicialização, busca, inserção, remoção, etc.
 void inicializarArvoreB(ArvoreB *arvore, const char *nomeArquivo) {
-    FILE *arquivo = fopen(nomeArquivo, "w+b");
+    FILE *arquivo = fopen(nomeArquivo, "wb");
     if (arquivo == NULL) {
         perror("Erro ao abrir arquivo");
         exit(1);
@@ -137,13 +142,13 @@ void dividirNo(int chave, long byteOffset, NoArvoreB *no, int *chavePromovida, l
     int tempDescendentes[MAX_DESCENDENTES + 1];
 
     // Copia as chaves e os byte offsets para arrays temporários
-    for (int i = 0; i < no->dados.nroChaves; i++) {
+    for (int i = 0; i < MAX_CHAVES; i++) {
         tempChaves[i] = no->dados.chaves[i];
         tempByteOffsets[i] = no->dados.byteOffset[i];
-    }
-    for (int i = 0; i <= no->dados.nroChaves; i++) {
         tempDescendentes[i] = no->dados.descendentes[i];
     }
+    tempDescendentes[no->dados.nroChaves] = no->dados.descendentes[MAX_DESCENDENTES - 1];
+    tempDescendentes[MAX_DESCENDENTES] = *descendenteDireita;
 
     // Insere a nova chave na posição correta nos arrays temporários
     int i;
@@ -159,13 +164,13 @@ void dividirNo(int chave, long byteOffset, NoArvoreB *no, int *chavePromovida, l
     *byteOffsetPromovido = tempByteOffsets[meio];
 
     novoNoDireita->dados.alturaNo = no->dados.alturaNo;
-    novoNoDireita->dados.nroChaves = ORDEM - 1 - meio;
+    novoNoDireita->dados.nroChaves = meio - 1;
     for (int j = 0; j < novoNoDireita->dados.nroChaves; j++) {
         novoNoDireita->dados.chaves[j] = tempChaves[meio + 1 + j];
         novoNoDireita->dados.byteOffset[j] = tempByteOffsets[meio + 1 + j];
         novoNoDireita->dados.descendentes[j] = tempDescendentes[meio + 1 + j];
     }
-    novoNoDireita->dados.descendentes[novoNoDireita->dados.nroChaves] = tempDescendentes[ORDEM];
+    novoNoDireita->dados.descendentes[novoNoDireita->dados.nroChaves] = tempDescendentes[MAX_DESCENDENTES];
 
     no->dados.nroChaves = meio;
     for (int j = 0; j < meio; j++) {
@@ -175,15 +180,15 @@ void dividirNo(int chave, long byteOffset, NoArvoreB *no, int *chavePromovida, l
     }
     no->dados.descendentes[meio] = tempDescendentes[meio];
 
-    for (int j = meio; j < MAX_CHAVES; j++){
+    for (int j = meio; j < MAX_CHAVES; j++) {
         no->dados.chaves[j] = -1;
         no->dados.byteOffset[j] = -1;
         no->dados.descendentes[j] = -1;
     }
     no->dados.descendentes[MAX_CHAVES] = -1;
 
-    
 }
+
 
 int inserirChaveRecursivo(FILE *arquivo, ArvoreB *arvore, int rrnAtual, int chave, long byteOffset, int *promoKey, long *promoOffset, int *promoRChild) {
     if (rrnAtual == -1) {
@@ -238,16 +243,17 @@ int inserirChaveRecursivo(FILE *arquivo, ArvoreB *arvore, int rrnAtual, int chav
     }
 }
 
+
 void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byteOffset) {
     FILE *arquivo = fopen(nomeArquivo, "r+b");
     if (arquivo == NULL) {
-        printf("Falha no processamento do arquivo. 1 %d\n", chave);
+        printf("Falha no processamento do arquivo.\n");
         return;
     }
 
     lerCabArvoreB(arquivo, &arvore->cabecalho);
-    if(arvore->cabecalho.status == '0'){
-        printf("Falha no processamento do arquivo.2 %d\n", chave);
+    if (arvore->cabecalho.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
         fclose(arquivo);
         return;
     }
@@ -260,9 +266,23 @@ void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byte
     long promoOffset;
     int promoRChild;
 
+    printf("A chave que vou tentar inserir: %d\n", chave);
+
     int retorno = inserirChaveRecursivo(arquivo, arvore, arvore->cabecalho.noRaiz, chave, byteOffset, &promoKey, &promoOffset, &promoRChild);
 
-    if (retorno == 1) {
+    if (retorno == 2) {
+        NoArvoreB novoNo;
+        criarNo(&novoNo);
+        novoNo.dados.alturaNo = 0;
+        novoNo.dados.nroChaves = 1;
+        novoNo.dados.chaves[0] = promoKey;
+        novoNo.dados.byteOffset[0] = promoOffset;
+        novoNo.dados.descendentes[0] = -1;
+        novoNo.dados.descendentes[1] = -1;
+        novoNo.rrn = arvore->cabecalho.proxRRN++;
+        arvore->cabecalho.noRaiz = novoNo.rrn;
+        escreverNo(arquivo, novoNo.rrn, &novoNo);
+    } else if (retorno == 1) {
         NoArvoreB novaRaiz;
         criarNo(&novaRaiz);
         novaRaiz.dados.alturaNo = arvore->cabecalho.noRaiz == -1 ? 0 : (arvore->cabecalho.noRaiz + 1);
@@ -279,7 +299,50 @@ void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byte
     arvore->cabecalho.nroChaves++;
     arvore->cabecalho.status = '1';
     escreverCabArvoreB(arquivo, &arvore->cabecalho);
+    printRaiz(arvore, arquivo);
     fclose(arquivo);
+}
+
+void printDescendente(ArvoreB * arvore, int rrn, FILE * arquivo){
+    NoArvoreB no;
+    criarNo(&no);
+
+    lerNo(arquivo, rrn, &no);
+    printf("-------------------------\n");
+
+    printf("altura no:%d\nnrochaves:%d\n", no.dados.alturaNo, no.dados.nroChaves);
+    for (int i = 0; i < MAX_CHAVES; i++)
+    {
+        printf("|| %d | %d | %ld ", no.dados.descendentes[i], no.dados.chaves[i], no.dados.byteOffset[i]);
+    }
+    printf("%d\n", no.dados.descendentes[MAX_CHAVES - 1]);
+    printf("-------------------------\n");
+
+}
+
+void printRaiz(ArvoreB * arvore, FILE * arquivo){
+    NoArvoreB no;
+    criarNo(&no);
+
+    lerNo(arquivo, arvore->cabecalho.noRaiz, &no);
+    printf("-------------------------\n");
+    printf("altura no:%d\nnrochaves:%d\n", no.dados.alturaNo, no.dados.nroChaves);
+    for (int i = 0; i < MAX_CHAVES; i++)
+    {
+        printf("|| %d | %d | %ld ", no.dados.descendentes[i], no.dados.chaves[i], no.dados.byteOffset[i]);
+    }
+    printf("%d\n", no.dados.descendentes[MAX_CHAVES - 1]);
+    printf("-------------------------\n");
+
+
+    if(no.dados.descendentes[0] == 0){
+        printDescendente(arvore, 0, arquivo);
+    }
+    if(no.dados.descendentes[1] == 1){
+        printDescendente(arvore, 1, arquivo);
+    }
+
+    
 }
 
 int main() {
@@ -318,11 +381,11 @@ int main() {
         printf("Chave 25 não encontrada.\n");
     }
 
-    result = buscarChave(&arvore, fopen("arvoreB.dat", "rb"), arvore.cabecalho.noRaiz, 40);
+    result = buscarChave(&arvore, fopen("arvoreB.dat", "rb"), arvore.cabecalho.noRaiz, 5);
     if (result != -1) {
-        printf("Chave 40 encontrada no byte offset: %ld\n", result);
+        printf("Chave 5 encontrada no byte offset: %ld\n", result);
     } else {
-        printf("Chave 40 não encontrada.\n");
+        printf("Chave 5 não encontrada.\n");
     }
 
     return 0;
