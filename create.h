@@ -16,11 +16,13 @@ Funções de criação:
     #include "util.h"
     #include "reg.h"
     #include "indice.h"
+    #include "arvoreB.h"
 
     // Função que implementa a funcionalidade 1: CREATE TABLE
     void create_table(char * arquivoIn, char * arquivoOut);
     // Função que implementa a funcionalidade 4: CREATE_INDEX
     bool create_index(char * arquivoDados, char * arquivoIndice);
+    bool create_arvoreB(char * arquivoDados, char * arquivoIndice);
 
 
 #endif

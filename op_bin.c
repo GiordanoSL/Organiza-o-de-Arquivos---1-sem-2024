@@ -162,3 +162,4 @@ void insereFimArqDados(FILE * fDados, REG_CAB * regCabDados, REG_DADO regDado){
     writeRegDadoBin(fDados, regDado);                    // escreve registro de dados
     regCabDados->proxByteOffset += regDado.tamanhoRegistro; // atualiza próximo byteoffset vazio para inserção
 }
+

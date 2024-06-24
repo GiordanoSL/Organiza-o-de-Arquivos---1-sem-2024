@@ -120,8 +120,19 @@ int main(void){
         free(arquivoDados);
         free(arquivoIndice);
         break;
-    default:
-            binarioNaTela("indice4.bin");  // chama função fornecida binarioNaTela
+    case 7: //caso 7 = create index arvoreB
+
+        // lendo o nome dos arquivos
+        arquivoIn = lerStr();// arquivo de entrada [nome].csv
+        arquivoOut = lerStr();// arquivo de saida  [nome].bin
+
+        //chamada da funcao
+        if(create_arvoreB(arquivoIn, arquivoOut))
+            binarioNaTela(arquivoOut);  // chama função fornecida binarioNaTela
+
+        //liberacao da memoria
+        free(arquivoIn);
+        free(arquivoOut);
         break;
     }
 
