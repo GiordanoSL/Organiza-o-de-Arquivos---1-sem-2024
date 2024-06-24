@@ -142,7 +142,7 @@ bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
 
     FILE * fDados = fopen(arquivoDados, "rb");     // arquivoDados: nome do arquivo de dados de entrada
     if(fDados == NULL){
-        printf("Falha no processamento do arquivo1.\n");
+        printf("Falha no processamento do arquivo.\n");
         return false;
     }
 
@@ -153,7 +153,7 @@ bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
     readRegCabBin(fDados, &reg_cab);    // lê cabecalho do arquivo de dados
 
     if(reg_cab.status == '0'){          // se o arquivo de dados estiver inconsistente
-        printf("Falha no processamento do arquivo3.\n");
+        printf("Falha no processamento do arquivo.\n");
         fclose(fDados);
         return false;
     }
@@ -171,25 +171,6 @@ bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
         }  
         i++;
     }
-
-    printBTree(&arvore, arquivoIndice);
-
-    FILE * fileId = fopen("indice1meu.bin", "rb");
-    CabecalhoArvoreB cabecalhomeu;
-    lerCabArvoreB(fileId, &cabecalhomeu);
-    printf("nro chaves do meu: %d\nproxRNN do meu: %d\n", cabecalhomeu.nroChaves, cabecalhomeu.proxRRN);
-    
-
-
-    FILE * file = fopen("indice1.bin", "rb");
-    CabecalhoArvoreB cabecalho;
-    lerCabArvoreB(file, &cabecalho);
-    printf("nro chaves: %d\nproxRNN: %d\n", cabecalho.nroChaves, cabecalho.proxRRN);
-
-    ArvoreB arvoreB;
-    arvoreB.cabecalho = cabecalho;
-
-    //printBTree(&arvoreB, "indice1.bin");
 
     // fecha os arquivos
     fclose(fDados);

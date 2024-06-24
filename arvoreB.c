@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-// https://prepinsta.com/data-structures/b-tree-insertion/
-
 #define ORDEM 4
 #define MAX_CHAVES (ORDEM - 1)
 #define MAX_DESCENDENTES ORDEM
@@ -72,6 +70,7 @@ void lerNo(FILE * arquivo, long rrn, NoArvoreB *no) {
         return;
 
     fseek(arquivo, rrn * TAM_REGISTRO + TAM_CAB_ARVOREB, SEEK_SET);
+    no->rrn = rrn;
     fread(&(no->dados.alturaNo), sizeof(int), 1, arquivo);
     fread(&(no->dados.nroChaves), sizeof(int), 1, arquivo);
     for (int i = 0; i < MAX_CHAVES; i++) {
@@ -79,6 +78,7 @@ void lerNo(FILE * arquivo, long rrn, NoArvoreB *no) {
         fread(&(no->dados.byteOffset[i]), sizeof(long), 1, arquivo);
     }
     fread(no->dados.descendentes, sizeof(int), MAX_DESCENDENTES, arquivo);
+
 }
 
 void escreverCabArvoreB(FILE * arquivo, CabecalhoArvoreB *cabecalho) {
@@ -150,25 +150,27 @@ void dividirNo(int chave, long byteOffset, NoArvoreB *no, int *chavePromovida, l
         tempDescendentes[i] = no->dados.descendentes[i];
     }
     tempDescendentes[MAX_CHAVES] = no->dados.descendentes[MAX_CHAVES];
-    tempDescendentes[MAX_DESCENDENTES] = *descendenteDireita;
+    //tempDescendentes[MAX_DESCENDENTES] = *descendenteDireita;
 
     // Insere a nova chave na posição correta nos arrays temporários
     int i;
     for (i = no->dados.nroChaves - 1; i >= 0 && chave < tempChaves[i]; i--) {
         tempChaves[i + 1] = tempChaves[i];
         tempByteOffsets[i + 1] = tempByteOffsets[i];
+        tempDescendentes[i + 2] = tempDescendentes[i + 1];
     }
     tempChaves[i + 1] = chave;
     tempByteOffsets[i + 1] = byteOffset;
+    tempDescendentes[i + 2] =  *descendenteDireita;
 
     // Promover a segunda menor chave
-    int meio = (ORDEM/2);
+    int meio = (ORDEM/2) - 1;
     *chavePromovida = tempChaves[meio];
     *byteOffsetPromovido = tempByteOffsets[meio];
 
     // Configurar o novo nó à direita
     novoNoDireita->dados.alturaNo = no->dados.alturaNo;
-    novoNoDireita->dados.nroChaves = (ORDEM / 2) - 1;
+    novoNoDireita->dados.nroChaves = (ORDEM / 2);
     for (int j = 0; j < novoNoDireita->dados.nroChaves; j++) {
         //printf("copiei o %d para a direita\n", tempChaves[meio + 1 + j]);
         novoNoDireita->dados.chaves[j] = tempChaves[meio + 1 + j];
@@ -301,7 +303,7 @@ void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byte
 
 void printNoArvoreB(NoArvoreB *no) {
     printf("-------------------------\n");
-    printf("altura no:%d\nnrochaves:%d\n", no->dados.alturaNo, no->dados.nroChaves);
+    printf("altura no:%d\nnrochaves:%d\nRRN:%ld\n", no->dados.alturaNo, no->dados.nroChaves, no->rrn);
     for (int i = 0; i < MAX_CHAVES; i++) {
         printf("|| %d | Key: %d | %ld ", no->dados.descendentes[i], no->dados.chaves[i], no->dados.byteOffset[i]);
     }
@@ -356,8 +358,6 @@ void printBTree(ArvoreB *arvore, const char *nomeArquivo) {
     fclose(arquivo);
 }
 
-
-
 // int main() {
 //     ArvoreB arvore;
 
@@ -366,10 +366,12 @@ void printBTree(ArvoreB *arvore, const char *nomeArquivo) {
 
 //     for (int i = 0; i < 22; i++)
 //     {
-//         inserirChave(&arvore, "arvoreB.dat", i, (long) i *10);
+//         int x = rand() % 10000;
+//         inserirChave(&arvore, "arvoreB.dat", x, (long) i *10);
+//         printf("%d ", x);
+//         printBTree(&arvore, "arvoreB.dat");
 //     }
-//     printBTree(&arvore, "arvoreB.dat");
-
+    
 //     // Insere algumas chaves na árvore B
 //     // inserirChave(&arvore, "arvoreB.dat", 10, 100);
 //     // printBTree(&arvore, "arvoreB.dat");
