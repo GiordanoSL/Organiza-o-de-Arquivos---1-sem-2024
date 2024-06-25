@@ -218,6 +218,7 @@ long insere_reg_dado_arvore(FILE * fDados, REG_DADO regDadoAux, REG_CAB * regCab
             regCabDados->topo = prox;                    // o topo recebe o próximo da lista de removidos
             fseek(fDados, ant, SEEK_SET);               // volto para o anterior (nesse caso, é o início do registro que estava no topo)
             writeRegDadoBin(fDados, regDadoAux);        // escreve registro
+            preencheLixo(fDados, dif);                  // preenche lixo ($)
             regCabDados->nroRegRem--;  // diminui nro de removidos do arquivo de dados
             byte_offset = ant;
 
