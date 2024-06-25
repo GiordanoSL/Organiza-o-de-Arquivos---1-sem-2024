@@ -13,6 +13,8 @@ Funções de select
     #include "op_csv.h"
     #include "util.h"
     #include "reg.h"
+    #include "create.h"
+    #include "arvoreB.h"
 
     // le todos os registros de dados no arquivo <arquivoIn> e os imprime na saida padrão
     void select_from(char * arquivoIn);
@@ -23,5 +25,8 @@ Funções de select
      Exemplo: 3 id 29382 nacionalide "RUSSIA"*/
     void select_from_where(char * arquivoIn, int num_buscas);
 
+    void select_from_arvoreB_id(char * arquivoBin, char * arquivoArvore, int num_buscas);
+
+    void select_from_arvoreB(char * arquivoBin, char * arquivoArvore, int num_buscas);
 
 #endif

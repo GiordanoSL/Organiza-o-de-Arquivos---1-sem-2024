@@ -184,3 +184,158 @@ void insere_reg_dado(FILE * fDados, REG_DADO_ID ** vetorIndices, REG_DADO regDad
     regCabDados->nroRegArq++; // atualiza cabecalho com novo numero de registros arquivados 
 
 }
+
+
+long insere_reg_dado_arvore(FILE * fDados, REG_DADO regDadoAux, REG_CAB * regCabDados){
+    // variáveis auxiliares para uso na inserção
+    int tam;    // tamanho do arquivo onde a busca se encontra
+    int dif;
+    long prox;  // byteoffset do proximo da lista de removidos
+    //char removido;  // usado para pular char de removido dos registros
+    long pos, ant;  // pos - byteoffset do atual, ant - byteoffset do anterior 
+
+    long byte_offset;
+
+    if (regCabDados->nroRegRem == 0) {   // Se não houver registros removidos, insere no fim
+        // Inserir no fim
+        byte_offset = regCabDados->proxByteOffset;
+        insereFimArqDados(fDados, regCabDados, regDadoAux); // insere registro de dados no fim do arquivo, atualiza proxByteOffset do cabecalho
+    } else {    // Se há registros removidos, possível reaproveitamento de espaço
+
+        // Possível inserção em espaço reaproveitado
+
+        fseek(fDados, regCabDados->topo + 1, SEEK_SET);  // vai para o topo da lista dos logicamente removidos, pulando o char de removido
+        ant = regCabDados->topo;                     // salva o anterior
+        fread(&tam, sizeof(int), 1, fDados);        // lê o tamanho do registro atual
+
+        // se o tamanho do registro logicamente removido for maior que o tamanho do registro que será inserido
+        if (tam >= regDadoAux.tamanhoRegistro) {
+            // Inserir no topo
+
+            dif = tam - regDadoAux.tamanhoRegistro; // calcula diferença de tamanho entre o espaço disponível e o registro
+            regDadoAux.tamanhoRegistro = tam;           // novo tamanho do registro é o espaço disponível
+            fread(&prox, sizeof(long), 1, fDados);      // lê o próximo
+            regCabDados->topo = prox;                    // o topo recebe o próximo da lista de removidos
+            fseek(fDados, ant, SEEK_SET);               // volto para o anterior (nesse caso, é o início do registro que estava no topo)
+            writeRegDadoBin(fDados, regDadoAux);        // escreve registro
+            regCabDados->nroRegRem--;  // diminui nro de removidos do arquivo de dados
+            byte_offset = ant;
+
+        } else {        // inserção não ocorrerá no topo
+            
+            while (tam < regDadoAux.tamanhoRegistro) {      // enquanto o tamanho do registro onde se encontra é menor do que o que será inserido
+                
+                ant = ftell(fDados);    //ant guarda posição do anterior antes do campo prox 
+                fread(&prox, sizeof(long), 1, fDados);  // lê o próximo
+
+                if(prox == -1)
+                    break;
+
+                fseek(fDados, prox + 1, SEEK_SET);  // vai para o próximo, já pulando o char de removido
+                pos = prox;                     // atualiza posição atual para o inicio do registro atual
+                //fread(&removido, sizeof(char), 1, fDados); // pula o removido
+                fread(&tam, sizeof(int), 1, fDados);       // lê o tamanho
+
+            }
+
+            // saiu em posição disponível para reaproveitamento ou chegou no fim da lista
+
+            if (prox == (long) -1){  // inserção no fim da lista
+                byte_offset = regCabDados->proxByteOffset;
+                insereFimArqDados(fDados, regCabDados, regDadoAux); // insere registro de dados no fim do arquivo, atualiza proxByteOffset do cabecalho
+                
+            } else {
+                // Insere no "meio" da lista, com re-aproveitamento de espaço
+            
+                int dif = tam - regDadoAux.tamanhoRegistro; // salva diferença entre espaço disponível e tamanho do registro
+                regDadoAux.tamanhoRegistro = tam;   // novo tamanho do registro = espaço disponível
+
+                // atualização da lista (proximo do anterior = proximo do atual)
+                fread(&prox, sizeof(long), 1, fDados);  // pega o proximo do atual
+                fseek(fDados, ant, SEEK_SET);           // vai para o anterior
+                fwrite(&prox, sizeof(long), 1, fDados); // proximo do anterior = proximo do atual
+                fseek(fDados, pos, SEEK_SET);           // volta para o atual
+
+                writeRegDadoBin(fDados, regDadoAux); // escreve novo registro
+                preencheLixo(fDados, dif);  // preenche lixo
+                regCabDados->nroRegRem--; // diminui nro de removidos do arquivo de dados 
+                byte_offset = pos;
+            }
+        }
+    }
+
+    regCabDados->nroRegArq++; // atualiza cabecalho com novo numero de registros arquivados 
+    return byte_offset;
+
+}
+
+void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert) {
+    FILE *fDados = fopen(arquivoDados, "rb+");      // abre arquivo de dados para leitura e escrita
+    if (fDados == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    FILE *fArv = fopen(arquivoArvore, "rb+");        // abre arquivo de arvore para leitura e escrita
+    if (fArv == NULL) {                     // verifica se o arquivo foi aberto sem erros
+        fclose(fDados);                         // fecha o arquivo que ja estava aberto
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    REG_CAB regCabDados;
+    ArvoreB arvB;
+    lerCabArvoreB(fArv, &(arvB.cabecalho));         // lê cabecalho do arquivo de arvore
+
+    readRegCabBin(fDados, &regCabDados);            // lê cabecalho do arquivo de dados
+
+    if (regCabDados.status == '0' || arvB.cabecalho.status == '0') {  // se um dos dois arquivos estiver inconsistente, falha no processamento do arquivo
+        printf("Falha no processamento do arquivo.\n");
+        fclose(fDados);
+        fclose(fArv);
+        return;
+    }
+
+    // Atualiza status dos arquivos para inconsistente
+    regCabDados.status = '0';
+    fseek(fDados, 0, SEEK_SET);
+    writeRegCabBin(fDados, regCabDados);
+    
+    arvB.cabecalho.status = '0';
+    fseek(fArv, 0, SEEK_SET);
+    fwrite(&(arvB.cabecalho.status), sizeof(char), 1, fArv);
+
+    REG_DADO regDadoAux;    // registro de dados auxiliar para inserção no arquivo de dados
+    long byte_offset;
+
+
+    for (int i = 0; i < numInsert; i++) {
+        // Lê os campos especificados do registro de dados a ser inserido
+        lerCamposRegCompleto(&regDadoAux);
+
+        byte_offset = insere_reg_dado_arvore(fDados, regDadoAux, &regCabDados);
+        inserirChave(&arvB, fArv, regDadoAux.id, byte_offset);
+
+        // libera memória das strings de regDadoAux
+        free(regDadoAux.nomeJogador);
+        free(regDadoAux.nacionalidade);
+        free(regDadoAux.nomeClube);
+    }
+
+    regCabDados.status = '1';           // atualiza o status para consistente
+    fseek(fDados, 0, SEEK_SET);         // vai para o início
+    writeRegCabBin(fDados, regCabDados);    // escreve novo cabeçalho
+
+    arvB.cabecalho.status = '1';
+    fseek(fArv, 0, SEEK_SET);
+    escreverCabArvoreB(fArv, &(arvB.cabecalho));
+
+    // fecha os arquivos
+    fclose(fDados);
+    fclose(fArv);
+
+    // binario na tela para os arquivos
+    binarioNaTela(arquivoDados);
+    binarioNaTela(arquivoArvore);
+}
+

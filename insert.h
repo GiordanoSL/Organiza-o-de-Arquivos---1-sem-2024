@@ -19,5 +19,7 @@ Função de inserção
     // também atualiza arquivo de índice                
     void insert_into(char * arquivoDados, char * arquivoIndice, int numInsert);
 
+    void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert);
+
 
 #endif

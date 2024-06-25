@@ -102,11 +102,11 @@ void lerCabArvoreB(FILE * arquivo, CabecalhoArvoreB *cabecalho) {
 void printRaiz(ArvoreB * arvore, FILE * arquivo);
 
 // Funções de inicialização, busca, inserção, remoção, etc.
-void inicializarArvoreB(ArvoreB *arvore, const char *nomeArquivo) {
+bool inicializarArvoreB(ArvoreB *arvore, const char *nomeArquivo) {
     FILE *arquivo = fopen(nomeArquivo, "wb");
     if (arquivo == NULL) {
-        perror("Erro ao abrir arquivo");
-        exit(1);
+        perror("Falha no processamento do arquivo.");
+        return false;
     }
     arvore->cabecalho.status = '1'; // Consistente
     arvore->cabecalho.noRaiz = -1;
@@ -118,6 +118,7 @@ void inicializarArvoreB(ArvoreB *arvore, const char *nomeArquivo) {
 
     escreverCabArvoreB(arquivo, &arvore->cabecalho);
     fclose(arquivo);
+    return true;
 }
 
 long buscarChave(ArvoreB *arvore, FILE *arquivo, long rrn, int chave) {
@@ -252,23 +253,7 @@ int inserirChaveRecursivo(FILE *arquivo, ArvoreB *arvore, int rrnAtual, int chav
 }
 
 
-void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byteOffset) {
-    FILE *arquivo = fopen(nomeArquivo, "r+b");
-    if (arquivo == NULL) {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
-
-    lerCabArvoreB(arquivo, &arvore->cabecalho);
-    if (arvore->cabecalho.status == '0') {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(arquivo);
-        return;
-    }
-
-    arvore->cabecalho.status = '0';
-    fseek(arquivo, 0, SEEK_SET);
-    fwrite(&arvore->cabecalho.status, sizeof(char), 1, arquivo);
+void inserirChave(ArvoreB *arvore, FILE *arquivo, int chave, long byteOffset) {
 
     int promoKey;
     long promoOffset;
@@ -295,10 +280,6 @@ void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byte
     }
 
     arvore->cabecalho.nroChaves++;
-    arvore->cabecalho.status = '1';
-    escreverCabArvoreB(arquivo, &(arvore->cabecalho));
-    //printRaiz(arvore, arquivo);
-    fclose(arquivo);
 }
 
 void printNoArvoreB(NoArvoreB *no) {

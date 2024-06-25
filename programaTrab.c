@@ -25,6 +25,7 @@ int main(void){
     char * arquivoOut;
     char * arquivoIndice;
     char * arquivoDados;
+    int num_buscas; // numero de buscas
 
     switch (comando){
     case 1: // caso 1 = create_table
@@ -53,17 +54,15 @@ int main(void){
         break;
     case 3: //caso 3 = select_from_where 
 
-        int numBuscas; // numero de buscas que serão feitas
-
         // lendo o nome dos arquivos
         arquivoIn = lerStr();// arquivo de entrada [nome].bin
 
         //lendo o numero de buscas
-        scanf(" %d", &numBuscas);
+        scanf(" %d", &num_buscas);
         getchar(); // descarta o '\n' da entrada
 
         //chamada da funcao
-        select_from_where(arquivoIn, numBuscas);
+        select_from_where(arquivoIn, num_buscas);
         
         //liberacao da memoria
         free(arquivoIn);
@@ -129,6 +128,48 @@ int main(void){
         //chamada da funcao
         if(create_arvoreB(arquivoIn, arquivoOut))
             binarioNaTela(arquivoOut);  // chama função fornecida binarioNaTela
+
+        //liberacao da memoria
+        free(arquivoIn);
+        free(arquivoOut);
+        break;
+    case 8: //caso 8 = select from arvoreB
+
+        // lendo o nome dos arquivos
+        arquivoDados = lerStr();// arquivo de entrada [nome].csv
+        arquivoIndice = lerStr();// arquivo de saida  [nome].bin
+        scanf(" %d", &num_buscas);
+
+        //chamada da funcao
+        select_from_arvoreB_id(arquivoDados, arquivoIndice, num_buscas);
+
+        //liberacao da memoria
+        free(arquivoIn);
+        free(arquivoOut);
+        break;
+    case 9: //caso 8 = select from arvoreB
+
+        // lendo o nome dos arquivos
+        arquivoDados = lerStr();// arquivo de entrada [nome].csv
+        arquivoIndice = lerStr();// arquivo de saida  [nome].bin
+        scanf(" %d", &num_buscas);
+
+        //chamada da funcao
+        select_from_arvoreB(arquivoDados, arquivoIndice, num_buscas);
+
+        //liberacao da memoria
+        free(arquivoIn);
+        free(arquivoOut);
+        break;
+    case 10: //caso 8 = select from arvoreB
+
+        // lendo o nome dos arquivos
+        arquivoDados = lerStr();// arquivo de entrada [nome].csv
+        arquivoIndice = lerStr();// arquivo de saida  [nome].bin
+        scanf(" %d", &num_buscas);
+
+        //chamada da funcao
+        insert_into_arvB(arquivoDados, arquivoIndice, num_buscas);
 
         //liberacao da memoria
         free(arquivoIn);

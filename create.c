@@ -161,18 +161,31 @@ bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
     int num_reg_total = reg_cab.nroRegArq + reg_cab.nroRegRem;  // calcula total de registros no arquivo
 
     ArvoreB arvore;
-    inicializarArvoreB(&arvore, arquivoIndice);
+    if(!inicializarArvoreB(&arvore, arquivoIndice)){
+        fclose(fDados);
+        return false;
+    }
+    FILE * fArv = fopen(arquivoIndice, "rb+"); // abre o arquivo da arvore para leitura e escrita
+    if(fArv == NULL){
+        printf("Falha no processamento do arquivo.\n");
+        fclose(fDados);
+        return false;
+    }
 
     int i = 0, count = 0; // i - controle do loop, count - nro de registros adicionados no vetor até aquela etapa
     while (i < num_reg_total){      // Enquanto ainda não foram lidos todos os registros no arquivo
         if(readRegDadoIdFromSrc(fDados, &reg_dado_id)){      // se a leitura do registro retornou true, insercao ordenada no vetor de indices
-            inserirChave(&arvore, arquivoIndice, reg_dado_id.id, reg_dado_id.byteoffset);
+            inserirChave(&arvore, fArv, reg_dado_id.id, reg_dado_id.byteoffset);
             count++;
         }  
         i++;
     }
 
+    arvore.cabecalho.status = '1';
+    escreverCabArvoreB(fArv, &(arvore.cabecalho));
+
     // fecha os arquivos
     fclose(fDados);
+    fclose(fArv);
     return true;
 }

@@ -48,8 +48,8 @@ Autores: Giordano Santorum Lorenzetto - nUSP 14574017
         CabecalhoArvoreB cabecalho;
     } ArvoreB;
 
-    void inserirChave(ArvoreB *arvore, const char *nomeArquivo, int chave, long byteOffset);
-    void inicializarArvoreB(ArvoreB *arvore, const char *nomeArquivo);
+    void inserirChave(ArvoreB *arvore, FILE *arquivo, int chave, long byteOffset);
+    bool inicializarArvoreB(ArvoreB *arvore, const char *nomeArquivo);
     long buscarChave(ArvoreB *arvore, FILE *arquivo, long rrn, int chave);
     void printBTree(ArvoreB *arvore, const char *nomeArquivo);
     void escreverCabArvoreB(FILE * arquivo, CabecalhoArvoreB *cabecalho);
