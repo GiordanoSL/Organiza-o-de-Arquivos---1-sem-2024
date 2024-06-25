@@ -26,6 +26,7 @@ int main(void){
     char * arquivoIndice;
     char * arquivoDados;
     int num_buscas; // numero de buscas
+    int numInsert; // numero de insercoes que serão feitas
 
     switch (comando){
     case 1: // caso 1 = create_table
@@ -101,9 +102,7 @@ int main(void){
         free(arquivoIndice);
         break;
     case 6: //caso 6 = insert_into 
-
-        int numInsert; // numero de insercoes que serão feitas
-
+    
         // lendo o nome dos arquivos
         arquivoDados = lerStr();// arquivo de dados [nome].bin
         arquivoIndice = lerStr();// arquivo de indice [nome].bin
@@ -137,7 +136,7 @@ int main(void){
 
         // lendo o nome dos arquivos
         arquivoDados = lerStr();// arquivo de entrada [nome].csv
-        arquivoIndice = lerStr();// arquivo de saida  [nome].bin
+        arquivoIndice = lerStr();// arquivo da arvoreB [nome].bin
         scanf(" %d", &num_buscas);
 
         //chamada da funcao
@@ -151,7 +150,7 @@ int main(void){
 
         // lendo o nome dos arquivos
         arquivoDados = lerStr();// arquivo de entrada [nome].csv
-        arquivoIndice = lerStr();// arquivo de saida  [nome].bin
+        arquivoIndice = lerStr();// arquivo da arvoreB [nome].bin
         scanf(" %d", &num_buscas);
 
         //chamada da funcao
@@ -165,11 +164,11 @@ int main(void){
 
         // lendo o nome dos arquivos
         arquivoDados = lerStr();// arquivo de entrada [nome].csv
-        arquivoIndice = lerStr();// arquivo de saida  [nome].bin
-        scanf(" %d", &num_buscas);
+        arquivoIndice = lerStr();// arquivo da arvoreB [nome].bin
+        scanf(" %d", &numInsert);
 
         //chamada da funcao
-        insert_into_arvB(arquivoDados, arquivoIndice, num_buscas);
+        insert_into_arvB(arquivoDados, arquivoIndice, numInsert);
 
         //liberacao da memoria
         free(arquivoIn);
