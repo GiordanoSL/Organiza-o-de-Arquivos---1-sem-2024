@@ -17,9 +17,8 @@ Função de inserção
 
     // insere no arquivo de dados com reaproveitamento de espaço pela forma best fit,
     // também atualiza arquivo de índice                
-    void insert_into(char * arquivoDados, char * arquivoIndice, int numInsert);
-
-    void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert);
+    void insert_into(char * arquivoDados, char * arquivoIndice, int numInsert); // índice simples
+    void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert);  // índice com árvore B
 
 
 #endif

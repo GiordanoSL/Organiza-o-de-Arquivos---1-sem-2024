@@ -22,6 +22,7 @@ Funções de criação:
     void create_table(char * arquivoIn, char * arquivoOut);
     // Função que implementa a funcionalidade 4: CREATE_INDEX
     bool create_index(char * arquivoDados, char * arquivoIndice);
+    // Função que implementa a funcionalidade 7: CREATE INDEX com árvore B
     bool create_arvoreB(char * arquivoDados, char * arquivoIndice);
 
 

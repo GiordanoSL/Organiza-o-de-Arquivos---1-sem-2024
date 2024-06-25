@@ -270,6 +270,7 @@ long insere_reg_dado_arvore(FILE * fDados, REG_DADO regDadoAux, REG_CAB * regCab
 
 }
 
+// Função que insere no arquivo de dados indexado pela árvore B
 void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert) {
     FILE *fDados = fopen(arquivoDados, "rb+");      // abre arquivo de dados para leitura e escrita
     if (fDados == NULL) {
@@ -278,7 +279,7 @@ void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert) {
     }
 
     FILE *fArv = fopen(arquivoArvore, "rb+");        // abre arquivo de arvore para leitura e escrita
-    if (fArv == NULL) {                     // verifica se o arquivo foi aberto sem erros
+    if (fArv == NULL) {                         // verifica se o arquivo foi aberto sem erros
         fclose(fDados);                         // fecha o arquivo que ja estava aberto
         printf("Falha no processamento do arquivo.\n");
         return;
@@ -314,8 +315,8 @@ void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert) {
         // Lê os campos especificados do registro de dados a ser inserido
         lerCamposRegCompleto(&regDadoAux);
 
-        byte_offset = insere_reg_dado_arvore(fDados, regDadoAux, &regCabDados);
-        inserirChave(&arvB, fArv, regDadoAux.id, byte_offset);
+        byte_offset = insere_reg_dado_arvore(fDados, regDadoAux, &regCabDados); // retorna byteoffset onde o registro foi inserido no arquivo de dados
+        inserirChave(&arvB, fArv, regDadoAux.id, byte_offset);  // insere no arquivo de índice da árvore B com o byteoffset obtido
 
         // libera memória das strings de regDadoAux
         free(regDadoAux.nomeJogador);
@@ -327,9 +328,8 @@ void insert_into_arvB(char *arquivoDados, char *arquivoArvore, int numInsert) {
     fseek(fDados, 0, SEEK_SET);         // vai para o início
     writeRegCabBin(fDados, regCabDados);    // escreve novo cabeçalho
 
-    arvB.cabecalho.status = '1';
-    fseek(fArv, 0, SEEK_SET);
-    escreverCabArvoreB(fArv, &(arvB.cabecalho));
+    arvB.cabecalho.status = '1';        // atualiza o status para consistente
+    escreverCabArvoreB(fArv, &(arvB.cabecalho));    // escreve novo cabeçalho (essa função já leva para o início)
 
     // fecha os arquivos
     fclose(fDados);

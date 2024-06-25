@@ -138,6 +138,7 @@ bool create_index(char * arquivoDados, char * arquivoIndice){
     return true;
 }
 
+// Função que implementa a funcionalidade 7: CREATE INDEX com árvore B
 bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
 
     FILE * fDados = fopen(arquivoDados, "rb");     // arquivoDados: nome do arquivo de dados de entrada
@@ -161,10 +162,11 @@ bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
     int num_reg_total = reg_cab.nroRegArq + reg_cab.nroRegRem;  // calcula total de registros no arquivo
 
     ArvoreB arvore;
-    if(!inicializarArvoreB(&arvore, arquivoIndice)){
-        fclose(fDados);
+    if(!inicializarArvoreB(&arvore, arquivoIndice)){    // inicializa arvore B: escreve cabecalho com status = 0 no arquivo
+        fclose(fDados);                                 // se não conseguiu inicializar a árvore, fecha o arquivo de dados
         return false;
     }
+
     FILE * fArv = fopen(arquivoIndice, "rb+"); // abre o arquivo da arvore para leitura e escrita
     if(fArv == NULL){
         printf("Falha no processamento do arquivo.\n");
@@ -172,17 +174,17 @@ bool create_arvoreB(char * arquivoDados, char * arquivoIndice){
         return false;
     }
 
-    int i = 0, count = 0; // i - controle do loop, count - nro de registros adicionados no vetor até aquela etapa
+    int i = 0, count = 0; // i - controle do loop, count - nro de registros adicionados na árvore até aquela etapa
     while (i < num_reg_total){      // Enquanto ainda não foram lidos todos os registros no arquivo
-        if(readRegDadoIdFromSrc(fDados, &reg_dado_id)){      // se a leitura do registro retornou true, insercao ordenada no vetor de indices
-            inserirChave(&arvore, fArv, reg_dado_id.id, reg_dado_id.byteoffset);
+        if(readRegDadoIdFromSrc(fDados, &reg_dado_id)){      // se a leitura do registro retornou true, insercao na arvore
+            inserirChave(&arvore, fArv, reg_dado_id.id, reg_dado_id.byteoffset);  
             count++;
         }  
         i++;
     }
 
-    arvore.cabecalho.status = '1';
-    escreverCabArvoreB(fArv, &(arvore.cabecalho));
+    arvore.cabecalho.status = '1';  // terminada a criação, status = 1
+    escreverCabArvoreB(fArv, &(arvore.cabecalho)); // escreve novo cabecalho
 
     // fecha os arquivos
     fclose(fDados);

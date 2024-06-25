@@ -259,11 +259,8 @@ void inserirChave(ArvoreB *arvore, FILE *arquivo, int chave, long byteOffset) {
     long promoOffset;
     int promoRChild;
 
-    //printf("A chave que vou tentar inserir: %d\n", chave);
-
     int retorno = inserirChaveRecursivo(arquivo, arvore, arvore->cabecalho.noRaiz, chave, byteOffset, &promoKey, &promoOffset, &promoRChild);
 
- 
     if (retorno == 1) {
         NoArvoreB novaRaiz;
         criarNo(&novaRaiz);
@@ -275,7 +272,6 @@ void inserirChave(ArvoreB *arvore, FILE *arquivo, int chave, long byteOffset) {
         novaRaiz.dados.descendentes[1] = promoRChild;
         novaRaiz.rrn = arvore->cabecalho.proxRRN++;
         arvore->cabecalho.noRaiz = novaRaiz.rrn;
-        //printf("TROQUEI A RAIZ1!!! \n");
         escreverNo(arquivo, novaRaiz.rrn, &novaRaiz);
     }
 
